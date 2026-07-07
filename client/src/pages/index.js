@@ -6,6 +6,9 @@ import CompanyProfile from "./CompanyProfile";
 import UploadJob from "./UploadJob";
 import About from "./About";
 import JobDetail from "./JobDetail";
+import Applications from "./Applications";
+import NotFound from "./NotFound";
+import ResetPassword from "./ResetPassword";
 
 export {
   FindJobs,
@@ -16,4 +19,7 @@ export {
   UploadJob,
   About,
   JobDetail,
+  Applications,
+  NotFound,
+  ResetPassword,
 };

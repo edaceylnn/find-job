@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8800/api-v1";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8800/api-v1";
 
 export const API = axios.create({
   baseURL: API_URL,
@@ -20,9 +20,17 @@ export const apiRequest = async ({ url, token, data, method }) => {
 
     return result?.data;
   } catch (error) {
+    if (!error.response) {
+      return {
+        success: false,
+        message:
+          "API sunucusuna ulaşılamıyor. Backend'in çalıştığını ve API adresini kontrol et.",
+      };
+    }
+
     const err = error.response.data;
     console.log(err);
-    return { status: err.success, message: err.message };
+    return { success: err.success, status: err.success, message: err.message };
   }
 };
 
@@ -34,7 +42,7 @@ export const handleFileUpload = async (uploadFile) => {
   try {
     const response = await axios.post(
       "https://api.cloudinary.com/v1_1/eda665/image/upload/",
-      formData
+      formData,
     );
     return response.data.secure_url;
   } catch (error) {
@@ -53,28 +61,33 @@ export const updateUrl = ({
   exp,
 }) => {
   const params = new URLSearchParams();
+  const hasValue = (value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === "string") return value.trim() !== "";
+    return Boolean(value);
+  };
 
   if (pageNum && pageNum > 1) {
     params.set("page", pageNum);
   }
 
-  if (query) {
+  if (hasValue(query)) {
     params.set("search", query);
   }
 
-  if (cmpLoc) {
+  if (hasValue(cmpLoc)) {
     params.set("location", cmpLoc);
   }
 
-  if (sort) {
+  if (hasValue(sort)) {
     params.set("sort", sort);
   }
 
-  if (jType) {
-    params.set("jType", jType);
+  if (hasValue(jType)) {
+    params.set("jtype", jType);
   }
 
-  if (exp) {
+  if (hasValue(exp)) {
     params.set("exp", exp);
   }
 

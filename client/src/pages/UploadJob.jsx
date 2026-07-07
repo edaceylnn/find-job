@@ -7,18 +7,20 @@ import {
   Loading,
   TextInput,
 } from "../components";
-import { jobs } from "../utils/data";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../utils";
+import { useNavigate, useParams } from "react-router-dom";
 
 const UploadJob = () => {
   const { user } = useSelector((state) => state.user);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = Boolean(id);
 
   const {
     register,
     handleSubmit,
-    getValues,
-    watch,
+    reset,
     formState: { errors },
   } = useForm({
     mode: "onChange",
@@ -28,6 +30,7 @@ const UploadJob = () => {
   const [errMsg, setErrMsg] = useState("");
   const [jobType, setJobType] = useState("Full-Time");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingJob, setIsFetchingJob] = useState(false);
   const [recentPost, setRecentPost] = useState([]);
 
   const onSubmit = async (data) => {
@@ -38,19 +41,27 @@ const UploadJob = () => {
 
     try {
       const res = await apiRequest({
-        url: "/jobs/upload-job",
+        url: isEditMode ? `/jobs/update-job/${id}` : "/jobs/upload-job",
         token: user?.token,
         data: newData,
-        method: "POST",
+        method: isEditMode ? "PUT" : "POST",
       });
 
-      if (res.status === "failed") {
-        setErrMsg({ ...res });
+      if (res?.status === "failed" || res?.success === false) {
+        setErrMsg({
+          status: "failed",
+          message: res?.message || "İşlem sırasında bir hata oluştu.",
+        });
       } else {
         setErrMsg({ status: "success", message: res.message });
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+
+        if (isEditMode) {
+          navigate(`/job-detail/${id}`);
+        } else {
+          reset();
+          setJobType("Full-Time");
+          getRecentPost();
+        }
       }
       setIsLoading(false);
     } catch (error) {
@@ -59,30 +70,93 @@ const UploadJob = () => {
     }
   };
 
+  const getJobDetails = async () => {
+    if (!isEditMode) return;
+    if (!user?._id) return;
+
+    setIsFetchingJob(true);
+
+    try {
+      const res = await apiRequest({
+        url: "/jobs/get-job-detail/" + id,
+        method: "GET",
+      });
+
+      if (!res?.success || res?.data?.company?._id !== user?._id) {
+        navigate("/find-jobs");
+        return;
+      }
+
+      const job = res.data;
+
+      reset({
+        jobTitle: job?.jobTitle || "",
+        salary: job?.salary || "",
+        vacancies: job?.vacancies || "",
+        experience: job?.experience || "",
+        location: job?.location || "",
+        desc: job?.detail?.[0]?.desc || "",
+        requirements: job?.detail?.[0]?.requirements || "",
+      });
+      setJobType(job?.jobType || "Full-Time");
+    } catch (error) {
+      console.log(error);
+      navigate("/find-jobs");
+    } finally {
+      setIsFetchingJob(false);
+    }
+  };
+
   const getRecentPost = async () => {
     try {
       const id = user?._id;
+
+      if (!id) {
+        setRecentPost([]);
+        return;
+      }
 
       const res = await apiRequest({
         url: "/companies/get-company/" + id,
         method: "GET",
       });
 
-      setRecentPost(res?.data?.jobPosts);
+      const posts = Array.isArray(res?.data?.jobPosts) ? res.data.jobPosts : [];
+      setRecentPost(posts);
     } catch (error) {
       console.log(error);
+      setRecentPost([]);
     }
   };
 
   useEffect(() => {
     getRecentPost();
-  }, []);
+  }, [user?._id]);
+
+  useEffect(() => {
+    getJobDetails();
+  }, [id, user?._id]);
+
+  if (isFetchingJob) {
+    return <Loading />;
+  }
 
   return (
-    <div className="container mx-auto flex flex-col md:flex-row gap-8 2xl:gap-14 bg-white px-5">
-      <div className="w-full h-fit md:w-2/3 2xl:2/4 bg-white px-5 py-10 md:px-10 shadow-md">
+    <div className="container mx-auto flex flex-col gap-8 bg-white px-5 py-8 lg:flex-row 2xl:gap-14">
+      <div
+        className={`h-fit w-full rounded-xl border border-slate-100 bg-white px-5 py-8 shadow-sm md:px-10 ${
+          isEditMode ? "lg:w-full" : "lg:w-2/3"
+        }`}
+      >
         <div>
-          <p className="text-gray-500 font-semibold text-2xl">Job Post</p>
+          <p className="text-2xl font-semibold text-slate-700">
+            {isEditMode ? "İlanı düzenle" : "Yeni ilan yayınla"}
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            {isEditMode
+              ? "Yayındaki ilan bilgilerini güncelleyebilirsin."
+              : "Adayların başvurabileceği yeni bir ilan oluştur."}
+          </p>
 
           <form
             className="w-full mt-2 flex flex-col gap-8"
@@ -90,58 +164,70 @@ const UploadJob = () => {
           >
             <TextInput
               name="jobTitle"
-              label="Job Title"
-              placeholder="eg. Software Engineer"
+              label="Pozisyon"
+              placeholder="Örn. Frontend Developer"
               type="text"
               required={true}
               register={register("jobTitle", {
-                required: "Job Title is required",
+                required: "Pozisyon zorunludur.",
               })}
               error={errors.jobTitle ? errors.jobTitle?.message : ""}
             />
 
-            <div className="w-full flex gap-4">
-              <div className={`w-1/2 mt-2`}>
-                <label className="text-gray-600 text-sm mb-1">Job Type</label>
+            <div className="grid w-full gap-4 md:grid-cols-2">
+              <div className="mt-2">
+                <label className="text-gray-600 text-sm mb-1">
+                  Çalışma türü
+                </label>
                 <JobTypes jobTitle={jobType} setJobTitle={setJobType} />
               </div>
 
-              <div className="w-1/2">
+              <div>
                 <TextInput
                   name="salary"
-                  label="Salary (USD)"
-                  placeholder="eg. 1500"
+                  label="Maaş (TL)"
+                  placeholder="Örn. 45000"
                   type="number"
+                  min="0"
+                  step="1000"
+                  onWheel={(e) => e.currentTarget.blur()}
                   register={register("salary", {
-                    required: "Salary is required",
+                    required: "Maaş bilgisi zorunludur.",
+                    valueAsNumber: true,
                   })}
                   error={errors.salary ? errors.salary?.message : ""}
                 />
               </div>
             </div>
 
-            <div className="w-full flex gap-4">
-              <div className="w-1/2">
+            <div className="grid w-full gap-4 md:grid-cols-2">
+              <div>
                 <TextInput
                   name="vacancies"
-                  label="No. of Vacancies"
-                  placeholder="vacancies"
+                  label="Açık pozisyon sayısı"
+                  placeholder="Örn. 2"
                   type="number"
+                  min="1"
+                  onWheel={(e) => e.currentTarget.blur()}
                   register={register("vacancies", {
-                    required: "Vacancies is required!",
+                    required: "Açık pozisyon sayısı zorunludur.",
+                    valueAsNumber: true,
                   })}
                   error={errors.vacancies ? errors.vacancies?.message : ""}
                 />
               </div>
 
-              <div className="w-1/2">
+              <div>
                 <TextInput
                   name="experience"
-                  label="Years of Experience"
-                  placeholder="experience"
+                  label="Deneyim yılı"
+                  placeholder="Örn. 3"
                   type="number"
+                  min="0"
+                  onWheel={(e) => e.currentTarget.blur()}
                   register={register("experience", {
-                    required: "Experience is required",
+                    required: "Deneyim bilgisi zorunludur.",
+                    valueAsNumber: true,
                   })}
                   error={errors.experience ? errors.experience?.message : ""}
                 />
@@ -150,24 +236,24 @@ const UploadJob = () => {
 
             <TextInput
               name="location"
-              label="Job Location"
-              placeholder="eg. New York"
+              label="Konum"
+              placeholder="Örn. İstanbul"
               type="text"
               register={register("location", {
-                required: "Job Location is required",
+                required: "Konum zorunludur.",
               })}
               error={errors.location ? errors.location?.message : ""}
             />
             <div className="flex flex-col">
               <label className="text-gray-600 text-sm mb-1">
-                Job Description
+                İş açıklaması
               </label>
               <textarea
                 className="rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2 resize-none"
                 rows={4}
                 cols={6}
                 {...register("desc", {
-                  required: "Job Description is required!",
+                  required: "İş açıklaması zorunludur.",
                 })}
                 aria-invalid={errors.desc ? "true" : "false"}
               ></textarea>
@@ -179,18 +265,32 @@ const UploadJob = () => {
             </div>
 
             <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">Requirements</label>
+              <label className="text-gray-600 text-sm mb-1">
+                Gereklilikler
+              </label>
               <textarea
                 className="rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2 resize-none"
                 rows={4}
                 cols={6}
-                {...register("requirements")}
+                {...register("requirements", {
+                  required: "Gereklilikler zorunludur.",
+                })}
               ></textarea>
+              {errors.requirements && (
+                <span role="alert" className="text-xs text-red-500 mt-0.5">
+                  {errors.requirements?.message}
+                </span>
+              )}
             </div>
 
             {errMsg && (
-              <span role="alert" className="text-sm text-red-500 mt-0.5">
-                {errMsg}
+              <span
+                role="alert"
+                className={`text-sm mt-0.5 ${
+                  errMsg.status === "success" ? "text-blue-600" : "text-red-500"
+                }`}
+              >
+                {errMsg.message}
               </span>
             )}
             <div className="mt-2">
@@ -199,29 +299,33 @@ const UploadJob = () => {
               ) : (
                 <CustomButton
                   type="submit"
-                  containerStyles="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-8 py-2 text-sm font-medium text-white hover:bg-[#1d4fd846] hover:text-[#1d4fd8] focus:outline-none "
-                  title="Sumbit"
+                  containerStyles="inline-flex justify-center rounded-full border border-transparent bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none"
+                  title={isEditMode ? "Güncelle" : "Yayınla"}
                 />
               )}
             </div>
           </form>
         </div>
       </div>
-      <div className="w-full md:w-1/3 2xl:2/4 p-5 mt-20 md:mt-0">
-        <p className="text-gray-500 font-semibold">Recent Job Post</p>
+      {!isEditMode && <div className="w-full p-0 lg:w-1/3 lg:p-5">
+        <p className="mb-4 font-semibold text-slate-600">
+          Son yayınlanan ilanlar
+        </p>
 
-        <div className="w-full flex flex-wrap gap-6">
-          {recentPost.slice(0, 4).map((job, index) => {
-            const data = {
-              name: user?.name,
-              email: user?.email,
-              logo: user?.profileUrl,
-              ...job
-            }
-            return <JobCard job={data} key={index} />;
-          })}
+        <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-1">
+          {(Array.isArray(recentPost) ? recentPost : [])
+            .slice(0, 4)
+            .map((job, index) => {
+              const data = {
+                name: user?.name,
+                email: user?.email,
+                logo: user?.profileUrl,
+                ...job,
+              };
+              return <JobCard job={data} key={index} />;
+            })}
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

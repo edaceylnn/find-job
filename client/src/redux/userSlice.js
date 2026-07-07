@@ -1,8 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { users } from "../utils/data";
+
+const getStoredUser = () => {
+  const storedUser = JSON.parse(window?.localStorage.getItem("userInfo")) ?? {};
+
+  if (storedUser?.user && storedUser?.token) {
+    const normalizedUser = { token: storedUser.token, ...storedUser.user };
+    localStorage.setItem("userInfo", JSON.stringify(normalizedUser));
+    return normalizedUser;
+  }
+
+  return storedUser;
+};
 
 const initialState = {
-  user: JSON.parse(window?.localStorage.getItem("userInfo")) ?? {},
+  user: getStoredUser(),
 };
 
 const userSlice = createSlice({
@@ -22,13 +33,13 @@ const userSlice = createSlice({
 export default userSlice.reducer;
 
 export function Login(user) {
-  return (dispatch, getState) => {
+  return (dispatch) => {
     dispatch(userSlice.actions.login({user}));
   };
 }
 
 export function Logout() {
-  return (dispatch, getState) => {
+  return (dispatch) => {
     dispatch(userSlice.actions.logout());
   };
 }

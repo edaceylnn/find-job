@@ -9,6 +9,7 @@ import JobCard from "./JobCard";
 import Loading from "./Loading";
 import CompanyCard from "./CompanyCard";
 import JobTypes from "./JobTypes";
+import EmptyState from "./EmptyState";
 
 export {
   Navbar,
@@ -22,4 +23,5 @@ export {
   Loading,
   CompanyCard,
   JobTypes,
+  EmptyState,
 };

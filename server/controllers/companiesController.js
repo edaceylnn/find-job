@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import Companies from "../models/companiesModel.js";
+import Jobs from "../models/jobsModel.js";
 import { response } from "express";
+import { createSearchRegex } from "../utils/search.js";
+import crypto from "crypto";
+import { sendPasswordResetEmail } from "../utils/email.js";
 
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -92,6 +96,107 @@ export const signIn = async (req, res, next) => {
   }
 };
 
+export const forgotCompanyPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      next("E-posta adresi zorunludur.");
+      return;
+    }
+
+    const company = await Companies.findOne({ email });
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Bu e-posta adresiyle kayıtlı şirket hesabı bulunamadı.",
+      });
+    }
+
+    const resetToken = crypto.randomBytes(24).toString("hex");
+    company.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    company.passwordResetExpires = Date.now() + 15 * 60 * 1000;
+
+    await company.save({ validateBeforeSave: false });
+
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}&accountType=company`;
+
+    try {
+      await sendPasswordResetEmail({
+        to: email,
+        resetUrl,
+        name: company.name,
+      });
+    } catch (error) {
+      company.passwordResetToken = undefined;
+      company.passwordResetExpires = undefined;
+      await company.save({ validateBeforeSave: false });
+
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Şifre sıfırlama e-postası gönderilemedi.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
+export const resetCompanyPassword = async (req, res, next) => {
+  try {
+    const { email, token, password } = req.body;
+
+    if (!email || !token || !password) {
+      next("E-posta, sıfırlama kodu ve yeni şifre zorunludur.");
+      return;
+    }
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const company = await Companies.findOne({
+      email,
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!company) {
+      return res.status(400).json({
+        success: false,
+        message: "Sıfırlama kodu geçersiz veya süresi dolmuş.",
+      });
+    }
+
+    company.password = password;
+    company.passwordResetToken = undefined;
+    company.passwordResetExpires = undefined;
+
+    await company.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Şifren başarıyla güncellendi. Yeni şifrenle giriş yapabilirsin.",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
 export const updateCompanyProfile = async (req, res, next) => {
   const { name, contact, location, profileUrl, about } = req.body;
 
@@ -128,6 +233,7 @@ export const updateCompanyProfile = async (req, res, next) => {
       success: true,
       message: "Company Profile Updated SUccessfully",
       company,
+      user: company,
       token,
     });
   } catch (error) {
@@ -169,11 +275,14 @@ export const getCompanies = async (req, res, next) => {
     const queryObject = {};
 
     if (search) {
-      queryObject.name = { $regex: search, $options: "i" };
+      queryObject.name = { $regex: createSearchRegex(search), $options: "i" };
     }
 
     if (location) {
-      queryObject.location = { $regex: location, $options: "i" };
+      queryObject.location = {
+        $regex: createSearchRegex(location),
+        $options: "i",
+      };
     }
 
     let queryResult = Companies.find(queryObject).select("-password");
@@ -199,7 +308,7 @@ export const getCompanies = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     // records count
-    const total = await Companies.countDocuments(queryResult);
+    const total = await Companies.countDocuments(queryObject);
     const numOfPage = Math.ceil(total / limit);
     // move next page
     // queryResult = queryResult.skip(skip).limit(limit);
@@ -232,7 +341,7 @@ export const getCompanyJobListing = async (req, res, next) => {
     const queryObject = {};
 
     if (search) {
-      queryObject.location = { $regex: search, $options: "i" };
+      queryObject.location = { $regex: createSearchRegex(search), $options: "i" };
     }
 
     let sorting;
@@ -290,6 +399,52 @@ export const getCompanyById = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: company,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
+export const getCompanyApplications = async (req, res, next) => {
+  try {
+    const id = req.body.user.userId;
+
+    const company = await Companies.findById(id);
+
+    if (!company) {
+      return res.status(403).json({
+        success: false,
+        message: "Başvuranları görüntülemek için şirket hesabı kullanmalısın.",
+      });
+    }
+
+    const jobs = await Jobs.find({ company: id })
+      .select("jobTitle application applicationStatus")
+      .populate({
+        path: "application",
+        select: "firstName lastName email jobTitle profileUrl",
+      });
+
+    const applications = jobs.reduce((acc, job) => {
+      const statuses = job.applicationStatus || [];
+      acc[job._id] = (job.application || []).map((applicant) => {
+        const applicantObject = applicant.toObject();
+        const statusInfo = statuses.find(
+          (item) => item?.applicant?.toString() === applicantObject._id.toString()
+        );
+
+        return {
+          ...applicantObject,
+          applicationStatusValue: statusInfo?.status || "pending",
+        };
+      });
+      return acc;
+    }, {});
+
+    res.status(200).json({
+      success: true,
+      data: applications,
     });
   } catch (error) {
     console.log(error);

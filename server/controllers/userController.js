@@ -43,8 +43,8 @@ export const updateUser = async (req, res, next) => {
     user.password = undefined;
 
     res.status(200).json({
-      sucess: true,
-      message: "User updated successfully",
+      success: true,
+      message: "Profil başarıyla güncellendi.",
       user,
       token,
     });
@@ -72,6 +72,42 @@ export const getUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       user: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "auth error",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+export const getUserById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "Aday bulunamadı.",
+      });
+    }
+
+    const user = await Users.findById(id).select(
+      "-password -passwordResetToken -passwordResetExpires"
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Aday bulunamadı.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user,
     });
   } catch (error) {
     console.log(error);

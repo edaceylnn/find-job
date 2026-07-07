@@ -3,11 +3,14 @@ import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Footer, Navbar } from "./components";
 import {
   About,
+  Applications,
   AuthPage,
   Companies,
   CompanyProfile,
   FindJobs,
   JobDetail,
+  NotFound,
+  ResetPassword,
   UploadJob,
   UserProfile,
 } from "./pages";
@@ -38,23 +41,21 @@ function App() {
           />
           <Route path='/find-jobs' element={<FindJobs />} />
           <Route path='/companies' element={<Companies />} />
-          <Route
-            path={
-              user?.accountType === "seeker"
-                ? "/user-profile"
-                : "/user-profile/:id"
-            }
-            element={<UserProfile />}
-          />
+          <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/user-profile/:id" element={<UserProfile />} />
 
           <Route path={"/company-profile"} element={<CompanyProfile />} />
           <Route path={"/company-profile/:id"} element={<CompanyProfile />} />
           <Route path={"/upload-job"} element={<UploadJob />} />
+          <Route path={"/edit-job/:id"} element={<UploadJob />} />
           <Route path={"/job-detail/:id"} element={<JobDetail />} />
+          <Route path={"/applications"} element={<Applications />} />
         </Route>
 
         <Route path='/about-us' element={<About />} />
         <Route path='/user-auth' element={<AuthPage />} />
+        <Route path='/reset-password' element={<ResetPassword />} />
+        <Route path='*' element={<NotFound />} />
       </Routes>
       {user && <Footer />}
     </main>

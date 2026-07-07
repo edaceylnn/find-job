@@ -1,41 +1,44 @@
-import React from "react";
-import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
+import { AiOutlineSearch } from "react-icons/ai";
 import { CiLocationOn } from "react-icons/ci";
+import { IoCloseCircle } from "react-icons/io5";
 import CustomButton from "./CustomButton";
-import { popularSearch } from "../utils/data";
 import { HeroImage } from "../assets";
-import deneme from "../assets/hadi.png";
 
-const SearchInput = ({ placeholder, icon, value, setValue, styles }) => {
+const SearchInput = ({ placeholder, icon, value, setValue, styles = "" }) => {
   const handleChange = (e) => {
     setValue(e.target.value);
   };
 
-  const clearInput = () => setValue("");
-
   return (
-    <div className={`flex w-full md:w-1/3 items-center ${styles}`}>
+    <div
+      className={`flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 ${styles}`}
+    >
       {icon}
 
       <input
         value={value}
         onChange={(e) => handleChange(e)}
         type="text"
-        className="w-full md:w-64 p-2 outline-none bg-transparent text-base"
+        className="w-full outline-none bg-transparent text-sm md:text-base text-slate-700 placeholder:text-slate-400"
         placeholder={placeholder}
       />
 
-      {/* <AiOutlineCloseCircle
-        className='hidden md:flex text-gray-600 text-xl cursor-pointer'
-        onClick={clearInput}
-      /> */}
+      {value && (
+        <button
+          type="button"
+          aria-label={`${placeholder} alanını temizle`}
+          onClick={() => setValue("")}
+          className="text-slate-400 transition hover:text-blue-600"
+        >
+          <IoCloseCircle className="text-xl" />
+        </button>
+      )}
     </div>
   );
 };
 
 const Header = ({
   title,
-  type,
   handleClick,
   searchQuery,
   setSearchQuery,
@@ -43,65 +46,58 @@ const Header = ({
   setLocation,
 }) => {
   return (
-    <div className="bg-white">
-      {/* bg-[#f7fdfd] */}
-      {/* <img src={deneme} className=" h-72 w-full object-none  mt-12 " /> */}
+    <section className="bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <div className="container mx-auto px-5 py-12 md:py-16 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+          <div className="relative z-10">
+            <div className="mb-7 max-w-3xl">
+              <span className="mb-3 inline-flex rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold text-blue-700">
+                Kariyerini hızlandır
+              </span>
+              <h1 className="text-3xl font-bold leading-tight text-slate-900 md:text-5xl">
+                {title}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                İlanları filtrele, sana uygun şirketleri keşfet ve başvuru
+                sürecini tek yerden takip et.
+              </p>
+            </div>
 
-      <div
-        className={`container mx-auto px-5 ${
-          type ? "h-[350px]" : "h-[350px]"
-        } flex items-center relative`}
-      >
-        <div className="w-full z-10">
-          <div className="mb-8">
-            <p className="text-slate-700 font-bold text-4xl">{title}</p>
-          </div>
-
-          <div className="w-full flex items-center justify-around bg-white px-2 md:px-5 py-2.5 md:py-6 shadow-2xl rounded-full">
-            <SearchInput
-              placeholder="Job Title or Keywords"
-              icon={<AiOutlineSearch className="text-gray-600 text-xl" />}
-              value={searchQuery}
-              setValue={setSearchQuery}
-            />
-            <SearchInput
-              placeholder="Add Country or City"
-              icon={<CiLocationOn className="text-gray-600 text-xl" />}
-              value={location}
-              setValue={setLocation}
-              styles={"hidden md:flex"}
-            />
-
-            <div>
-              <CustomButton
-                onClick={handleClick}
-                title="Search"
-                containerStyles={
-                  "text-white py-2 md:py3 px-3 md:px-10 focus:outline-none bg-blue-600 rounded-full md:rounded-md text-sm md:text-base"
-                }
+            <form
+              onSubmit={handleClick}
+              className="grid w-full gap-3 rounded-2xl bg-white p-3 shadow-xl shadow-blue-900/10 md:grid-cols-[1fr_1fr_auto] md:p-4"
+            >
+              <SearchInput
+                placeholder="Pozisyon veya anahtar kelime"
+                icon={<AiOutlineSearch className="text-blue-600 text-xl" />}
+                value={searchQuery}
+                setValue={setSearchQuery}
               />
-            </div>
+              <SearchInput
+                placeholder="Ülke veya şehir"
+                icon={<CiLocationOn className="text-blue-600 text-xl" />}
+                value={location}
+                setValue={setLocation}
+              />
+
+              <CustomButton
+                type="submit"
+                title="Ara"
+                containerStyles="w-full rounded-xl bg-blue-600 px-8 py-3 text-sm font-semibold text-white outline-none transition hover:bg-blue-700 md:w-auto md:text-base"
+              />
+            </form>
           </div>
 
-          {/* {type && (
-            <div className='w-full lg:1/2 flex flex-wrap gap-3 md:gap-6 py-10 md:py-14'>
-              {popularSearch.map((search, index) => (
-                <span
-                  key={index}
-                  className='bg-[#1d4fd826] text-[#1d4ed8] py-1 px-2 rounded-full text-sm md:text-base'
-                >
-                  {search}
-                </span>
-              ))}
-            </div>
-          )} */}
-        </div>
-
-        <div className="w-1/3 h-full absolute top-24 md:-top-6 lg:-top-14 right-16 2xl:right-[18rem]">
-          <img src={HeroImage} className='object-contain' />
+          <div className="hidden lg:flex justify-end">
+            <img
+              src={HeroImage}
+              alt="İş arama platformu"
+              className="max-h-[320px] w-full max-w-md object-contain"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

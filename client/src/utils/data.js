@@ -20,21 +20,21 @@ import {
   // ];
   
   export const experience = [
-    { title: "Under 1 Year", value: "0-1" },
-    { title: "1 -2 Year", value: "1-2" },
-    { title: "2 -6 Year", value: "2-6" },
-    { title: "Over 6 Years", value: "6-20" },
+    { title: "1 yıldan az", value: "0-1" },
+    { title: "1 - 2 yıl", value: "1-2" },
+    { title: "2 - 6 yıl", value: "2-6" },
+    { title: "6 yıl ve üzeri", value: "6-20" },
   ];
   
   export const popularSearch = [
-    "Software Engineer",
-    "Developer",
-    "Full-Stack Developer",
-    "Data Scientist",
-    "Remote",
-    "Full-Time",
-    "Sales",
-    "Office Assistant",
+    "Yazılım mühendisi",
+    "Geliştirici",
+    "Full-stack geliştirici",
+    "Veri bilimci",
+    "Uzaktan",
+    "Tam zamanlı",
+    "Satış",
+    "Ofis asistanı",
   ];
   
   export const jobs = [
@@ -42,23 +42,23 @@ import {
       id: "1",
       company: {
         name: "Microsoft Corporation",
-        location: "Califonia",
+        location: "Kaliforniya",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Twitter,
       },
-      jobTitle: "Software Engineer",
-      location: "West US",
+      jobTitle: "Yazılım Mühendisi",
+      location: "İstanbul",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -69,23 +69,23 @@ import {
       id: "2",
       company: {
         name: "Google Corporation",
-        location: "Califonia",
+        location: "Kaliforniya",
         email: "support@google.com",
         contact: "support@google",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Google,
       },
-      jobTitle: "System Analyst",
-      location: "New York",
+      jobTitle: "Sistem Analisti",
+      location: "Ankara",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -96,23 +96,23 @@ import {
       id: "3",
       company: {
         name: "LinkedIn Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Linkedin,
       },
-      jobTitle: "Social Meia Manager",
-      location: "India, Mumbai",
+      jobTitle: "Sosyal Medya Yöneticisi",
+      location: "Mumbai",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -123,23 +123,23 @@ import {
       id: "4",
       company: {
         name: "Spotify Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Spotify,
       },
       jobTitle: "CFO",
-      location: "Norway",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -150,23 +150,23 @@ import {
       id: "5",
       company: {
         name: "Facebook Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Facebook,
       },
       jobTitle: "CFO",
-      location: "Norway",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -177,23 +177,23 @@ import {
       id: "6",
       company: {
         name: "WhatsApp Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: WhatsApp,
       },
-      jobTitle: "Product Manager",
-      location: "Norway",
+      jobTitle: "Ürün Yöneticisi",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -204,23 +204,23 @@ import {
       id: "7",
       company: {
         name: "Instagram Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Instagram,
       },
-      jobTitle: "Product Manager",
-      location: "Norway",
+      jobTitle: "Ürün Yöneticisi",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -231,23 +231,23 @@ import {
       id: "8",
       company: {
         name: "Youtube Corporation",
-        location: "Germany",
+        location: "Berlin",
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: Youtube,
       },
-      jobTitle: "Product Manager",
-      location: "Norway",
+      jobTitle: "Ürün Yöneticisi",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -262,19 +262,19 @@ import {
         email: "support@microsoft.com",
         contact: "support@microsoft",
         about:
-          "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         profileUrl: CodeWave,
       },
-      jobTitle: "Subscribe Please",
-      location: "Norway",
+      jobTitle: "Abonelik Uzmanı",
+      location: "Oslo",
       jobType: "Full-Time",
       salary: "1200",
       detail: [
         {
-          desc: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+          desc: "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
   
           requirement:
-            "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+            "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
         },
       ],
       applicants: ["1", "2", "3", "4"],
@@ -286,18 +286,30 @@ import {
   export const footerLinks = [
     {
       id: "01",
-      title: "Company",
-      links: ["Home", "About Us", "Services", "Our Team"],
+      title: "Keşfet",
+      links: [
+        { label: "İş Bul", to: "/find-jobs" },
+        { label: "Şirketler", to: "/companies" },
+        { label: "Hakkımızda", to: "/about-us" },
+      ],
     },
     {
       id: "02",
-      title: "Policy",
-      links: ["Policies", "Contact", "FAQ"],
+      title: "Hesap",
+      links: [
+        { label: "Profilim", to: "/user-profile" },
+        { label: "Başvurularım", to: "/applications" },
+        { label: "İlan yayınla", to: "/upload-job" },
+      ],
     },
     {
       id: "03",
-      title: "Support",
-      links: ["Account", "Support Center", "Feedback", "Accessibility"],
+      title: "Destek",
+      links: [
+        { label: "İletişim", to: "/about-us" },
+        { label: "Geri bildirim", to: "/about-us" },
+        { label: "Erişilebilirlik", to: "/about-us" },
+      ],
     },
   ];
   
@@ -305,66 +317,66 @@ import {
     {
       _id: 1,
       name: "Microsoft Corporation",
-      location: "Califonia",
+      location: "Kaliforniya",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Twitter,
       jobPosts: ["1", "2"],
     },
     {
       _id: 2,
       name: "Google Corporation",
-      location: "Califonia",
+      location: "Kaliforniya",
       email: "support@google.com",
       contact: "support@google",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Google,
       jobPosts: ["1", "2"],
     },
     {
       _id: 3,
       name: "LinkedIn Corporation",
-      location: "Germany",
+      location: "Berlin",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Linkedin,
       jobPosts: ["1", "2"],
     },
     {
       _id: 4,
       name: "Spotify Corporation",
-      location: "Germany",
+      location: "Berlin",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Spotify,
       jobPosts: ["1", "2"],
     },
     {
       _id: 5,
       name: "Facebook Corporation",
-      location: "Germany",
+      location: "Berlin",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Facebook,
       jobPosts: ["1", "2"],
     },
     {
       _id: 6,
       name: "WhatsApp Corporation",
-      location: "Germany",
+      location: "Berlin",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: WhatsApp,
       jobPosts: ["1", "2"],
     },
@@ -375,18 +387,18 @@ import {
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Instagram,
       jobPosts: ["1", "2"],
     },
     {
       _id: 8,
       name: "Youtube Corporation",
-      location: "Germany",
+      location: "Berlin",
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Youtube,
       jobPosts: ["1", "2"],
     },
@@ -397,7 +409,7 @@ import {
       email: "support@microsoft.com",
       contact: "support@microsoft",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: CodeWave,
       jobPosts: ["1", "2"],
     },
@@ -406,11 +418,11 @@ import {
   export const users = [
     {
       name: "Google Corporation",
-      location: "Califonia",
+      location: "Kaliforniya",
       email: "support@google.com",
       contact: "support@google",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: Google,
       jobPosts: ["1", "2"],
       token: "gjhsdgsjgdjh",
@@ -421,7 +433,7 @@ import {
       email: "support@code.com",
       contact: "support@google",
       about:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+        "KariyerBul demo verisi olarak hazırlanan bu açıklama, şirketin çalışma kültürünü ve pozisyonun temel beklentilerini özetler.",
       profileUrl: CodeWave,
       accountType: "seeker",
       cvUrl: "",

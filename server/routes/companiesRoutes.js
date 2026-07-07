@@ -2,10 +2,13 @@ import express, { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import {
   getCompanies,
+  getCompanyApplications,
   getCompanyById,
   getCompanyJobListing,
   getCompanyProfile,
+  forgotCompanyPassword,
   register,
+  resetCompanyPassword,
   signIn,
   updateCompanyProfile,
 } from "../controllers/companiesController.js";
@@ -26,10 +29,13 @@ router.post("/register", limiter, register);
 
 // LOGIN
 router.post("/login", limiter, signIn);
+router.post("/forgot-password", limiter, forgotCompanyPassword);
+router.post("/reset-password", limiter, resetCompanyPassword);
 
 // GET DATA
 router.post("/get-company-profile", userAuth, getCompanyProfile);
 router.post("/get-company-joblisting", userAuth, getCompanyJobListing);
+router.get("/applications", userAuth, getCompanyApplications);
 router.get("/", getCompanies);
 router.get("/get-company/:id", getCompanyById);
 

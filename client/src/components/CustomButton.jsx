@@ -1,10 +1,16 @@
-import React from "react";
-
-const CustomButton = ({ title, containerStyles, iconRight, type, onClick }) => {
+const CustomButton = ({
+  title,
+  containerStyles,
+  iconRight,
+  type,
+  onClick,
+  disabled,
+}) => {
   return (
     <button
       onClick={onClick}
       type={type || "button"}
+      disabled={disabled}
       className={`inline-flex items-center ${containerStyles}`}
     >
       {title}

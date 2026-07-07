@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import { Fragment, useState } from "react";
 import { Menu, Transition } from "@headlessui/react";
 import { BiChevronDown } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
@@ -6,7 +6,6 @@ import { HiMenuAlt3 } from "react-icons/hi";
 import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import CustomButton from "./CustomButton";
-import { users } from "../utils/data";
 import { useSelector, useDispatch } from "react-redux";
 import { Logout } from "../redux/userSlice";
 
@@ -15,7 +14,7 @@ function MenuList({ user, onClick }) {
 
   const handleLogout = () => {
     dispatch(Logout());
-    window.location.replace("/")
+    window.location.replace("/");
   };
 
   return (
@@ -72,7 +71,7 @@ function MenuList({ user, onClick }) {
                       } mr-2 h-5 w-5  `}
                       aria-hidden="true"
                     />
-                    {user?.accountType ? "User Profile" : "Company Profile"}
+                    {user?.accountType ? "Profilim" : "Şirket Profili"}
                   </Link>
                 )}
               </Menu.Item>
@@ -91,7 +90,7 @@ function MenuList({ user, onClick }) {
                       } mr-2 h-5 w-5  `}
                       aria-hidden="true"
                     />
-                    Log Out
+                    Çıkış Yap
                   </button>
                 )}
               </Menu.Item>
@@ -103,7 +102,7 @@ function MenuList({ user, onClick }) {
   );
 }
 const Navbar = () => {
-  const {user} = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleCloseNavbar = () => {
@@ -112,26 +111,43 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="relative bg-white z-50">
-        <nav className="container mx-auto flex items-center justify-between p-5">
+      <div className="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
+        <nav className="container mx-auto flex items-center justify-between px-5 py-4">
           <div>
-            <Link to="/" className="text-blue-600 font-bold text-xl">
-              Job<span className="text-[#1677cccb]">Finder</span>
+            <Link to="/" className="text-blue-600 font-bold text-2xl">
+              Kariyer<span className="text-blue-300">Bul</span>{" "}
             </Link>
           </div>
 
-          <ul className="hidden lg:flex gap-10 text-base">
+          <ul className="hidden lg:flex items-center gap-8 text-sm font-medium text-slate-700">
             <li>
-              <Link to="/">Find Job</Link>
+              <Link className="hover:text-blue-600" to="/">
+                İş Bul
+              </Link>
             </li>
             <li>
-              <Link to="/companies">Companies</Link>
+              <Link className="hover:text-blue-600" to="/companies">
+                Şirketler
+              </Link>
             </li>
             <li>
-              <Link to={user?.accountType === "seeker" ? "/applications" : "/upload-job"}>{user?.accountType === "seeker" ? "Applications" : "Upload Job"}</Link>
+              <Link
+                className="hover:text-blue-600"
+                to={
+                  user?.accountType === "seeker"
+                    ? "/applications"
+                    : "/upload-job"
+                }
+              >
+                {user?.accountType === "seeker"
+                  ? "Başvurularım"
+                  : "İlan Yayınla"}
+              </Link>
             </li>
             <li>
-              <Link to="/about-us">About</Link>
+              <Link className="hover:text-blue-600" to="/about-us">
+                Hakkımızda
+              </Link>
             </li>
           </ul>
 
@@ -139,8 +155,8 @@ const Navbar = () => {
             {!user?.token ? (
               <Link to="/user-auth">
                 <CustomButton
-                  title="Sign In"
-                  containerStyles="text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600"
+                  title="Giriş Yap"
+                  containerStyles="text-blue-600 py-2 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-sm font-semibold border border-blue-600 transition"
                 />
               </Link>
             ) : (
@@ -161,33 +177,35 @@ const Navbar = () => {
         {/* MOBILE MENU */}
         <div
           className={`${
-            isOpen ? "absolute flex bg-white " : "hidden"
-          } container mx-auto lg:hidden flex-col pl-8 gap-3 py-5`}
+            isOpen
+              ? "absolute left-0 right-0 flex bg-white shadow-xl"
+              : "hidden"
+          } container mx-auto lg:hidden flex-col gap-4 px-8 py-6 text-sm font-medium text-slate-700`}
         >
           <Link to="/" onClick={handleCloseNavbar}>
-            Find Job
+            İş Bul
           </Link>
           <Link to="/companies" onClick={handleCloseNavbar}>
-            Companies
+            Şirketler
           </Link>
           <Link
             onClick={handleCloseNavbar}
             to={
-              user?.accountType === "seeker" ? "applly-gistory" : "upload-job"
+              user?.accountType === "seeker" ? "/applications" : "/upload-job"
             }
           >
-            {user?.accountType === "seeker" ? "Applications" : "Upload Job"}
+            {user?.accountType === "seeker" ? "Başvurularım" : "İlan Yayınla"}
           </Link>
           <Link to="/about-us" onClick={handleCloseNavbar}>
-            About
+            Hakkımızda
           </Link>
 
-          <div className="w-full py-10">
+          <div className="w-full pt-4">
             {!user?.token ? (
               <a href="/user-auth">
                 <CustomButton
-                  title="Sign In"
-                  containerStyles={`text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600`}
+                  title="Giriş Yap"
+                  containerStyles="text-blue-600 py-2 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-sm font-semibold border border-blue-600 transition"
                 />
               </a>
             ) : (

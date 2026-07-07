@@ -11,6 +11,17 @@ const jobSchema = new mongoose.Schema(
     experience: { type: Number, default: 0 },
     detail: [{ desc: { type: String }, requirements: { type: String } }],
     application: [{ type: Schema.Types.ObjectId, ref: "Users" }],
+    applicationStatus: [
+      {
+        applicant: { type: Schema.Types.ObjectId, ref: "Users" },
+        status: {
+          type: String,
+          enum: ["pending", "reviewed", "accepted", "rejected"],
+          default: "pending",
+        },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

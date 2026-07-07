@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   CompanyCard,
   CustomButton,
+  EmptyState,
   Header,
   ListBox,
   Loading,
@@ -56,16 +57,16 @@ const Companies = () => {
     await fetchCompanies();
   };
 
-  const handleShowMore = () => {};
+  const handleShowMore = () => setPage((prev) => prev + 1);
 
   useEffect(() => {
     fetchCompanies();
-  }, [page, sort]);
+  }, [page, sort, searchQuery, cmpLocation]);
 
   return (
     <div className="w-full">
       <Header
-        title="Find Your Dream Company"
+        title="Çalışmak istedigin şirketi bul"
         handleClick={handleSearchSubmit}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -73,24 +74,34 @@ const Companies = () => {
         setLocation={setCmpLocation}
       />
 
-      <div className="container mx-auto flex flex-col gap-5 2xl:gap-10 px-5 py-6 bg-white">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm md:text-base">
-            Shwoing: <span className="font-semibold">{recordsCount}</span>{" "}
-            Companies Available
+      <div className="container mx-auto flex flex-col gap-5 bg-white px-5 py-8 2xl:gap-10">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm md:text-base text-slate-600">
+            <span className="font-semibold text-slate-900">{recordsCount}</span>{" "}
+            şirket bulundu
           </p>
 
-          <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
-            <p className="text-sm md:text-base">Sort By:</p>
-
+          <div className="flex items-center gap-2">
             <ListBox sort={sort} setSort={setSort} />
           </div>
         </div>
 
         <div className="w-full flex flex-col gap-6">
-          {data?.map((cmp, index) => (
-            <CompanyCard cmp={cmp} key={index} />
-          ))}
+          {!isFetching && data?.length === 0 ? (
+            <EmptyState
+              title="Şirket bulunamadı"
+              description="Arama veya konum filtresini değiştirerek tekrar deneyebilirsin. Yeni şirketler eklendikçe burada listelenecek."
+              actionLabel="Filtreleri temizle"
+              onAction={() => {
+                setSearchQuery("");
+                setCmpLocation("");
+                setPage(1);
+                navigate("/companies");
+              }}
+            />
+          ) : (
+            data?.map((cmp, index) => <CompanyCard cmp={cmp} key={index} />)
+          )}
 
           {isFetching && (
             <div className="mt-10">
@@ -98,17 +109,19 @@ const Companies = () => {
             </div>
           )}
 
-          <p className="text-sm text-right">
-            {data?.length} records out of {recordsCount}
-          </p>
+          {data?.length > 0 && (
+            <p className="text-sm text-right">
+              {recordsCount} kayıttan {data?.length} tanesi gösteriliyor
+            </p>
+          )}
         </div>
 
         {numPage > page && !isFetching && (
           <div className="w-full flex items-center justify-center pt-16">
             <CustomButton
               onClick={handleShowMore}
-              title="Load More"
-              containerStyles={`text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600`}
+              title="Daha fazla yükle"
+              containerStyles="text-blue-600 py-2 px-6 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600 transition"
             />
           </div>
         )}

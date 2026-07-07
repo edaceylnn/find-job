@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
+import Users from "../models/userModel.js";
+import { createSearchRegex } from "../utils/search.js";
 
 export const createJob = async (req, res, next) => {
   try {
@@ -95,6 +97,29 @@ export const updateJob = async (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(id))
       return res.status(404).send(`No Company with id: ${id}`);
 
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    const job = await Jobs.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    if (job.company?.toString() !== id) {
+      return res.status(403).json({
+        success: false,
+        message: "Bu ilanı yalnızca ilanı yayınlayan şirket düzenleyebilir.",
+      });
+    }
+
     const jobPost = {
       jobTitle,
       jobType,
@@ -103,15 +128,19 @@ export const updateJob = async (req, res, next) => {
       vacancies,
       experience,
       detail: { desc, requirements },
-      _id: jobId,
     };
 
-    await Jobs.findByIdAndUpdate(jobId, jobPost, { new: true });
+    const updatedJob = await Jobs.findByIdAndUpdate(jobId, jobPost, {
+      new: true,
+    }).populate({
+      path: "company",
+      select: "-password",
+    });
 
     res.status(200).json({
       success: true,
-      message: "Job Post Updated SUccessfully",
-      jobPost,
+      message: "İlan başarıyla güncellendi.",
+      data: updatedJob,
     });
   } catch (error) {
     console.log(error);
@@ -128,7 +157,10 @@ export const getJobPosts = async (req, res, next) => {
     let queryObject = {};
 
     if (location) {
-      queryObject.location = { $regex: location, $options: "i" };
+      queryObject.location = {
+        $regex: createSearchRegex(location),
+        $options: "i",
+      };
     }
 
     if (jtype) {
@@ -145,10 +177,11 @@ export const getJobPosts = async (req, res, next) => {
     }
 
     if (search) {
+      const searchRegex = createSearchRegex(search);
       const searchQuery = {
         $or: [
-          { jobTitle: { $regex: search, $options: "i" } },
-          { jobType: { $regex: search, $options: "i" } },
+          { jobTitle: { $regex: searchRegex, $options: "i" } },
+          { jobType: { $regex: searchRegex, $options: "i" } },
         ],
       };
       queryObject = { ...queryObject, ...searchQuery };
@@ -179,7 +212,7 @@ export const getJobPosts = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     //records count
-    const totalJobs = await Jobs.countDocuments(queryResult);
+    const totalJobs = await Jobs.countDocuments(queryObject);
     const numOfPage = Math.ceil(totalJobs / limit);
 
     queryResult = queryResult.limit(limit * page);
@@ -244,15 +277,238 @@ export const getJobById = async (req, res, next) => {
   }
 };
 
+export const applyJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.body.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    const job = await Jobs.findById(id);
+    const applicant = await Users.findById(userId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    if (!applicant) {
+      return res.status(403).json({
+        success: false,
+        message: "Başvuru yapmak için aday hesabı kullanmalısın.",
+      });
+    }
+
+    if (job.company?.toString() === userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Kendi ilanına başvuramazsın.",
+      });
+    }
+
+    const alreadyApplied = job.application?.some(
+      (applicantId) => applicantId.toString() === userId
+    );
+
+    if (alreadyApplied) {
+      return res.status(400).json({
+        success: false,
+        message: "Bu ilana zaten başvurdun.",
+      });
+    }
+
+    job.application.push(userId);
+    job.applicationStatus.push({
+      applicant: userId,
+      status: "pending",
+      updatedAt: new Date(),
+    });
+    await job.save();
+
+    const updatedJob = await Jobs.findById(id).populate({
+      path: "company",
+      select: "-password",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Başvurun başarıyla alındı.",
+      data: updatedJob,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
+export const getMyApplications = async (req, res, next) => {
+  try {
+    const userId = req.body.user.userId;
+
+    const applicant = await Users.findById(userId);
+
+    if (!applicant) {
+      return res.status(403).json({
+        success: false,
+        message: "Başvuruları görüntülemek için aday hesabı kullanmalısın.",
+      });
+    }
+
+    const jobs = await Jobs.find({ application: userId })
+      .populate({
+        path: "company",
+        select: "-password",
+      })
+      .sort("-updatedAt");
+    const jobsWithStatus = jobs.map((job) => {
+      const jobObject = job.toObject();
+      const statusInfo = jobObject.applicationStatus?.find(
+        (item) => item?.applicant?.toString() === userId
+      );
+
+      return {
+        ...jobObject,
+        applicationStatusValue: statusInfo?.status || "pending",
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      total: jobsWithStatus.length,
+      data: jobsWithStatus,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
+export const updateApplicationStatus = async (req, res, next) => {
+  try {
+    const { jobId, applicantId } = req.params;
+    const { status } = req.body;
+    const companyId = req.body.user.userId;
+    const validStatuses = ["pending", "reviewed", "accepted", "rejected"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Geçersiz başvuru durumu.",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(jobId) ||
+      !mongoose.Types.ObjectId.isValid(applicantId)
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "İlan veya aday bulunamadı.",
+      });
+    }
+
+    const job = await Jobs.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    if (job.company?.toString() !== companyId) {
+      return res.status(403).json({
+        success: false,
+        message: "Başvuru durumunu yalnızca ilan sahibi şirket güncelleyebilir.",
+      });
+    }
+
+    const hasApplication = job.application?.some(
+      (id) => id.toString() === applicantId
+    );
+
+    if (!hasApplication) {
+      return res.status(404).json({
+        success: false,
+        message: "Bu ilana ait başvuru bulunamadı.",
+      });
+    }
+
+    const statusIndex = job.applicationStatus.findIndex(
+      (item) => item?.applicant?.toString() === applicantId
+    );
+
+    if (statusIndex >= 0) {
+      job.applicationStatus[statusIndex].status = status;
+      job.applicationStatus[statusIndex].updatedAt = new Date();
+    } else {
+      job.applicationStatus.push({
+        applicant: applicantId,
+        status,
+        updatedAt: new Date(),
+      });
+    }
+
+    await job.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Başvuru durumu güncellendi.",
+      data: {
+        jobId,
+        applicantId,
+        status,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
 export const deleteJobPost = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.body.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    const job = await Jobs.findById(id);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    if (job.company?.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Bu ilanı yalnızca ilanı yayınlayan şirket silebilir.",
+      });
+    }
 
     await Jobs.findByIdAndDelete(id);
+    await Companies.findByIdAndUpdate(userId, {
+      $pull: { jobPosts: id },
+    });
 
     res.status(200).send({
       success: true,
-      messsage: "Job Post Delted Successfully.",
+      message: "İlan başarıyla silindi.",
     });
   } catch (error) {
     console.log(error);

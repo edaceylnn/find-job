@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BiBriefcaseAlt2 } from "react-icons/bi";
-import { BsStars } from "react-icons/bs";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 import Header from "../components/Header";
-import { experience, jobTypes, jobs } from "../utils/data";
-import { CustomButton, JobCard, ListBox, Loading } from "../components";
+import { experience, jobTypes } from "../utils/data";
+import {
+  CustomButton,
+  EmptyState,
+  JobCard,
+  ListBox,
+  Loading,
+} from "../components";
 import { apiRequest, updateUrl } from "../utils";
+import { getJobTypeLabel } from "../utils/translations";
 
 const FindJobs = () => {
   const [sort, setSort] = useState("Newest");
@@ -96,35 +101,42 @@ const FindJobs = () => {
       newExpVal?.sort((a, b) => a - b);
 
       setFilterExp(`${newExpVal[0]}-${newExpVal[newExpVal?.length - 1]}`);
+    } else {
+      setFilterExp("");
     }
   }, [expVal]);
 
-
   useEffect(() => {
     fetchJobs();
-  }, [sort, filterJobTypes, filterExp, page]);
+  }, [sort, filterJobTypes, filterExp, page, searchQuery, jobLocation]);
 
   return (
     <div>
       <Header
-        title="Find Your Dream Job with Ease"
+        title="Hayalindeki işi kolayca bul"
         type="home"
         handleClick={handleSearchSubmit}
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={(value) => {
+          setPage(1);
+          setSearchQuery(value);
+        }}
         location={jobLocation}
-        setLocation={setJobLocation}
+        setLocation={(value) => {
+          setPage(1);
+          setJobLocation(value);
+        }}
       />
 
-      <div className="container mx-auto flex gap-6 2xl:gap-10 md:px-5 py-0 md:py-6 bg-white">
-        <div className="hidden md:flex flex-col w-1/6 h-fit bg-white shadow-sm p-5">
-          <p className="text-lg font-semibold text-slate-600">Filter Search</p>
+      <div className="container mx-auto flex flex-col gap-6 bg-white px-5 py-8 lg:flex-row 2xl:gap-10">
+        <aside className="hidden h-fit rounded-xl border border-slate-100 bg-white p-5 shadow-sm lg:flex lg:w-72 lg:flex-col">
+          <p className="text-lg font-semibold text-slate-700">Filtrele</p>
 
           <div className="py-2">
             <div className="flex justify-between mb-3">
               <p className="flex items-center gap-2 font-semibold">
-                <BiBriefcaseAlt2 />
-                Job Type
+                {/* <BiBriefcaseAlt2 /> */}
+                İş türü
               </p>
 
               <button>
@@ -138,10 +150,11 @@ const FindJobs = () => {
                   <input
                     type="checkbox"
                     value={jtype}
-                    className="w-4 h-4"
+                    checked={filterJobTypes.includes(jtype)}
+                    className="w-4 h-4 accent-blue-600"
                     onChange={(e) => filterJobs(e.target.value)}
                   />
-                  <span>{jtype}</span>
+                  <span>{getJobTypeLabel(jtype)}</span>
                 </div>
               ))}
             </div>
@@ -150,8 +163,8 @@ const FindJobs = () => {
           <div className="py-2 mt-4">
             <div className="flex justify-between mb-3">
               <p className="flex items-center gap-2 font-semibold">
-                <BsStars />
-                Experience
+                {/* <BsStars /> */}
+                Deneyim
               </p>
 
               <button>
@@ -165,7 +178,8 @@ const FindJobs = () => {
                   <input
                     type="checkbox"
                     value={exp?.value}
-                    className="w-4 h-4"
+                    checked={expVal.includes(exp?.value)}
+                    className="w-4 h-4 accent-blue-600"
                     onChange={(e) => filterExperience(e.target.value)}
                   />
                   <span>{exp.title}</span>
@@ -173,33 +187,50 @@ const FindJobs = () => {
               ))}
             </div>
           </div>
-        </div>
+        </aside>
 
-        <div className="w-full md:w-5/6 px-5 md:px-0">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm md:text-base">
-              Shwoing: <span className="font-semibold">{recordCount}</span> Jobs
-              Available
+        <div className="w-full flex-1">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm md:text-base text-slate-600">
+              <span className="font-semibold text-slate-900">
+                {recordCount}
+              </span>{" "}
+              ilan bulundu
             </p>
 
-            <div className="flex flex-col md:flex-row gap-0 md:gap-2 md:items-center">
-              <p className="text-sm md:text-base">Sort By:</p>
-
+            <div className="flex items-center gap-2">
               <ListBox sort={sort} setSort={setSort} />
             </div>
           </div>
 
-          <div className="w-full flex flex-wrap gap-4">
-            {data?.map((job, index) => {
-              const newJob = {
-                name: job?.company?.name,
-                logo: job?.company?.profileUrl,
-                ...job,
-              };
+          {!isFetching && data?.length === 0 ? (
+            <EmptyState
+              title="İlan bulunamadı"
+              description="Arama kelimeni veya filtrelerini değiştirerek tekrar deneyebilirsin. Sana uygun yeni ilanlar eklendikçe burada görünecek."
+              actionLabel="Filtreleri temizle"
+              onAction={() => {
+                setSearchQuery("");
+                setJobLocation("");
+                setFilterJobTypes([]);
+                setExpVal([]);
+                setFilterExp("");
+                setPage(1);
+                navigate("/find-jobs");
+              }}
+            />
+          ) : (
+            <div className="grid w-full gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {data?.map((job, index) => {
+                const newJob = {
+                  name: job?.company?.name,
+                  logo: job?.company?.profileUrl,
+                  ...job,
+                };
 
-              return <JobCard job={newJob} key={index} />;
-            })}
-          </div>
+                return <JobCard job={newJob} key={index} />;
+              })}
+            </div>
+          )}
 
           {isFetching && (
             <div className="py-10">
@@ -212,8 +243,8 @@ const FindJobs = () => {
             <div className="w-full flex items-center justify-center pt-16">
               <CustomButton
                 onClick={handleShowMore}
-                title="Load More"
-                containerStyles={`text-blue-600 py-1.5 px-5 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600`}
+                title="Daha fazla yükle"
+                containerStyles="text-blue-600 py-2 px-6 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600 transition"
               />
             </div>
           )}

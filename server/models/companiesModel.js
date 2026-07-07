@@ -25,11 +25,13 @@ const companySchema = new Schema({
   about: { type: String },
   profileUrl: { type: String },
   jobPosts: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
 });
 
 // middelwares
 companySchema.pre("save", async function () {
-  if (!this.isModified) return;
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
