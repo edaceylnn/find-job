@@ -16,7 +16,7 @@ dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 8800;
 
 // MONGODB CONNECTION
 dbConnection();
@@ -49,6 +49,20 @@ app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "KariyerBul API çalışıyor.",
+  });
+});
+
+app.get("/api-v1/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API sağlıklı.",
+  });
+});
 
 app.use(router);
 
