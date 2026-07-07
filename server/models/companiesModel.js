@@ -29,7 +29,7 @@ const companySchema = new Schema({
   passwordResetExpires: { type: Date },
 });
 
-// middelwares
+// Middlewares
 companySchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);

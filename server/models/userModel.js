@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// middelwares
+// Middlewares
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);

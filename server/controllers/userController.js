@@ -76,7 +76,7 @@ export const getUser = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: "auth error",
+      message: "Kimlik doğrulama hatası",
       success: false,
       error: error.message,
     });
@@ -112,7 +112,7 @@ export const getUserById = async (req, res, next) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: "auth error",
+      message: "Kimlik doğrulama hatası",
       success: false,
       error: error.message,
     });

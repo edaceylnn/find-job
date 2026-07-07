@@ -63,7 +63,7 @@ export const signIn = async (req, res, next) => {
   try {
     //validation
     if (!email || !password) {
-      next("Please Provide AUser Credentials");
+      next("Lütfen e-posta ve şifre bilgilerini gir.");
       return;
     }
 
@@ -86,7 +86,7 @@ export const signIn = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Login SUccessfully",
+      message: "Giriş başarılı.",
       user: company,
       token,
     });
@@ -203,7 +203,7 @@ export const updateCompanyProfile = async (req, res, next) => {
   try {
     // validation
     if (!name || !location || !about || !contact || !profileUrl) {
-      next("Please Provide All Required Fields");
+      next("Lütfen tüm zorunlu alanları doldur.");
       return;
     }
 
@@ -231,7 +231,7 @@ export const updateCompanyProfile = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Company Profile Updated SUccessfully",
+      message: "Şirket profili başarıyla güncellendi.",
       company,
       user: company,
       token,
@@ -271,7 +271,7 @@ export const getCompanies = async (req, res, next) => {
   try {
     const { search, sort, location } = req.query;
 
-    //conditons for searching filters
+    // Search filters
     const queryObject = {};
 
     if (search) {
@@ -301,7 +301,7 @@ export const getCompanies = async (req, res, next) => {
       queryResult = queryResult.sort("-name");
     }
 
-    // PADINATIONS
+    // Pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
 
@@ -313,7 +313,7 @@ export const getCompanies = async (req, res, next) => {
     // move next page
     // queryResult = queryResult.skip(skip).limit(limit);
 
-    // show mopre instead of moving to next page
+    // Show more instead of moving to next page
     queryResult = queryResult.limit(limit * page);
 
     const companies = await queryResult;
@@ -337,7 +337,7 @@ export const getCompanyJobListing = async (req, res, next) => {
   const id = req.body.user.userId;
 
   try {
-    //conditons for searching filters
+    // Search filters
     const queryObject = {};
 
     if (search) {

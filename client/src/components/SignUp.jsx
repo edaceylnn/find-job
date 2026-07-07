@@ -19,7 +19,8 @@ const authErrorMessages = {
   "Invalid email or Password": "E-posta veya şifre hatalı.",
   "Invalid -email or password": "E-posta veya şifre hatalı.",
   "Invalid email or password": "E-posta veya şifre hatalı.",
-  "Please Provide AUser Credentials": "Lütfen e-posta ve şifre bilgilerini gir.",
+  "Lütfen e-posta ve şifre bilgilerini gir.":
+    "Lütfen e-posta ve şifre bilgilerini gir.",
 };
 
 const getAuthErrorMessage = (message) =>

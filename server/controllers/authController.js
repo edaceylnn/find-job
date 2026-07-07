@@ -5,7 +5,7 @@ import { sendPasswordResetEmail } from "../utils/email.js";
 export const register = async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
 
-  //validate fileds
+  // validate fields
 
   if (!firstName) {
     next("First Name is required");
@@ -62,7 +62,7 @@ export const signIn = async (req, res, next) => {
   try {
     //validation
     if (!email || !password) {
-      next("Please Provide AUser Credentials");
+      next("Lütfen e-posta ve şifre bilgilerini gir.");
       return;
     }
 
@@ -88,7 +88,7 @@ export const signIn = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: "Login successfully",
+      message: "Giriş başarılı.",
       user,
       token,
     });

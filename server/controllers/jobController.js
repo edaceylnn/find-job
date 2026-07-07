@@ -25,7 +25,7 @@ export const createJob = async (req, res, next) => {
       !requirements ||
       !desc
     ) {
-      next("Please Provide All Required Fields");
+      next("Lütfen tüm zorunlu alanları doldur.");
       return;
     }
 
@@ -58,7 +58,7 @@ export const createJob = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Job Posted SUccessfully",
+      message: "İlan başarıyla yayınlandı.",
       job,
     });
   } catch (error) {
@@ -89,7 +89,7 @@ export const updateJob = async (req, res, next) => {
       !desc ||
       !requirements
     ) {
-      next("Please Provide All Required Fields");
+      next("Lütfen tüm zorunlu alanları doldur.");
       return;
     }
     const id = req.body.user.userId;
