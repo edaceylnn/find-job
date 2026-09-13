@@ -7,6 +7,7 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 export const API = axios.create({
   baseURL: API_URL,
   responseType: "json",
+  timeout: 15000,
 });
 
 export const apiRequest = async ({ url, token, data, method }) => {
@@ -22,6 +23,14 @@ export const apiRequest = async ({ url, token, data, method }) => {
 
     return result?.data;
   } catch (error) {
+    if (error.code === "ECONNABORTED") {
+      return {
+        success: false,
+        message:
+          "API isteği zaman aşımına uğradı. Backend adresini ve sunucu durumunu kontrol et.",
+      };
+    }
+
     if (!error.response) {
       return {
         success: false,
