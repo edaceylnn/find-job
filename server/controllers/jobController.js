@@ -3,6 +3,8 @@ import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
 import Users from "../models/userModel.js";
 import { createSearchRegex } from "../utils/search.js";
+import { sendApplicationStatusEmail } from "../utils/email.js";
+import { sendNotFound, sendServerError } from "../utils/httpResponses.js";
 
 export const createJob = async (req, res, next) => {
   try {
@@ -31,8 +33,9 @@ export const createJob = async (req, res, next) => {
 
     const id = req.body.user.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).send(`No Company with id: ${id}`);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
 
     const jobPost = {
       jobTitle,
@@ -51,8 +54,12 @@ export const createJob = async (req, res, next) => {
     //update the company information with job id
     const company = await Companies.findById(id);
 
+    if (!company) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
+
     company.jobPosts.push(job._id);
-    const updateCompany = await Companies.findByIdAndUpdate(id, company, {
+    await Companies.findByIdAndUpdate(id, company, {
       new: true,
     });
 
@@ -62,8 +69,7 @@ export const createJob = async (req, res, next) => {
       job,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "İlan yayınlanamadı.");
   }
 };
 
@@ -94,8 +100,9 @@ export const updateJob = async (req, res, next) => {
     }
     const id = req.body.user.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).send(`No Company with id: ${id}`);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
 
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(404).json({
@@ -143,8 +150,7 @@ export const updateJob = async (req, res, next) => {
       data: updatedJob,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "İlan güncellenemedi.");
   }
 };
 
@@ -215,7 +221,7 @@ export const getJobPosts = async (req, res, next) => {
     const totalJobs = await Jobs.countDocuments(queryObject);
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    queryResult = queryResult.limit(limit * page);
+    queryResult = queryResult.skip(skip).limit(limit);
 
     const jobs = await queryResult;
 
@@ -227,8 +233,7 @@ export const getJobPosts = async (req, res, next) => {
       numOfPage,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "İlanlar getirilemedi.");
   }
 };
 
@@ -236,16 +241,17 @@ export const getJobById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendNotFound(res, "İş ilanı bulunamadı.");
+    }
+
     const job = await Jobs.findById({ _id: id }).populate({
       path: "company",
       select: "-password",
     });
 
     if (!job) {
-      return res.status(200).send({
-        message: "Job Post Not Found",
-        success: false,
-      });
+      return sendNotFound(res, "İş ilanı bulunamadı.");
     }
 
     //GET SIMILAR JOB POST
@@ -272,8 +278,7 @@ export const getJobById = async (req, res, next) => {
       similarJobs,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "İlan detayı getirilemedi.");
   }
 };
 
@@ -343,8 +348,7 @@ export const applyJob = async (req, res, next) => {
       data: updatedJob,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Başvuru yapılamadı.");
   }
 };
 
@@ -385,8 +389,7 @@ export const getMyApplications = async (req, res, next) => {
       data: jobsWithStatus,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Başvurular getirilemedi.");
   }
 };
 
@@ -458,6 +461,29 @@ export const updateApplicationStatus = async (req, res, next) => {
 
     await job.save();
 
+    // Best-effort notification — a flaky email provider shouldn't fail the
+    // status update itself, so this is fire-and-forget with its own catch.
+    try {
+      const [applicant, company] = await Promise.all([
+        Users.findById(applicantId).select("email firstName"),
+        Companies.findById(companyId).select("name"),
+      ]);
+
+      if (applicant?.email) {
+        await sendApplicationStatusEmail({
+          to: applicant.email,
+          name: applicant.firstName,
+          jobTitle: job.jobTitle,
+          companyName: company?.name,
+          status,
+        });
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV !== "test") {
+        console.error("Application status email failed:", error.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: "Başvuru durumu güncellendi.",
@@ -468,8 +494,88 @@ export const updateApplicationStatus = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Başvuru durumu güncellenemedi.");
+  }
+};
+
+export const toggleSaveJob = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.body.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    const [job, applicant] = await Promise.all([
+      Jobs.findById(id),
+      Users.findById(userId),
+    ]);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "İş ilanı bulunamadı.",
+      });
+    }
+
+    if (!applicant) {
+      return res.status(403).json({
+        success: false,
+        message: "İlan kaydetmek için aday hesabı kullanmalısın.",
+      });
+    }
+
+    const alreadySaved = applicant.savedJobs?.some(
+      (savedId) => savedId.toString() === id
+    );
+
+    if (alreadySaved) {
+      applicant.savedJobs = applicant.savedJobs.filter(
+        (savedId) => savedId.toString() !== id
+      );
+    } else {
+      applicant.savedJobs.push(id);
+    }
+
+    await applicant.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: alreadySaved ? "İlan kaydedilenlerden çıkarıldı." : "İlan kaydedildi.",
+      saved: !alreadySaved,
+      savedJobs: applicant.savedJobs,
+    });
+  } catch (error) {
+    sendServerError(res, error, "İlan kaydetme işlemi tamamlanamadı.");
+  }
+};
+
+export const getSavedJobs = async (req, res, next) => {
+  try {
+    const userId = req.body.user.userId;
+
+    const applicant = await Users.findById(userId).populate({
+      path: "savedJobs",
+      populate: { path: "company", select: "-password" },
+    });
+
+    if (!applicant) {
+      return res.status(403).json({
+        success: false,
+        message: "Kaydedilen ilanları görüntülemek için aday hesabı kullanmalısın.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: applicant.savedJobs || [],
+    });
+  } catch (error) {
+    sendServerError(res, error, "Kaydedilen ilanlar getirilemedi.");
   }
 };
 
@@ -511,7 +617,6 @@ export const deleteJobPost = async (req, res, next) => {
       message: "İlan başarıyla silindi.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "İlan silinemedi.");
   }
 };

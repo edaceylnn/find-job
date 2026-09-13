@@ -1,6 +1,8 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8800/api-v1";
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 export const API = axios.create({
   baseURL: API_URL,
@@ -34,14 +36,22 @@ export const apiRequest = async ({ url, token, data, method }) => {
   }
 };
 
-export const handleFileUpload = async (uploadFile) => {
+// resourceType: "image" for photos, "raw" for non-image files like a CV PDF.
+// Note the Cloudinary unsigned upload preset must itself allow the "raw"
+// resource type for CV uploads to succeed.
+export const handleFileUpload = async (uploadFile, resourceType = "image") => {
+  if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+    console.error("Cloudinary ortam değişkenleri eksik.");
+    return "";
+  }
+
   const formData = new FormData();
   formData.append("file", uploadFile);
-  formData.append("upload_preset", "jobfinder");
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
   try {
     const response = await axios.post(
-      "https://api.cloudinary.com/v1_1/eda665/image/upload/",
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload/`,
       formData,
     );
     return response.data.secure_url;

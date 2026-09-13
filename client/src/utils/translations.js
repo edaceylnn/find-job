@@ -25,6 +25,16 @@ export const applicationStatusLabels = {
 export const getApplicationStatusLabel = (status) =>
   applicationStatusLabels[status] || "Başvuru alındı";
 
+const applicationStatusTones = {
+  pending: "neutral",
+  reviewed: "primary",
+  accepted: "success",
+  rejected: "danger",
+};
+
+export const getApplicationStatusTone = (status) =>
+  applicationStatusTones[status] || "neutral";
+
 export const formatRelativeTime = (date) => {
   if (!date) return "";
 

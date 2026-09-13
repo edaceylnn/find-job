@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { EmptyState, JobCard, Loading } from "../components";
+import { EmptyState, JobCard, Loading, PageContainer, PageTitle } from "../components";
 import { apiRequest } from "../utils";
-import { getApplicationStatusLabel } from "../utils/translations";
+import { getApplicationStatusLabel, getApplicationStatusTone } from "../utils/translations";
 
 const Applications = () => {
   const { user } = useSelector((state) => state.user);
@@ -41,11 +41,14 @@ const Applications = () => {
   }, [user?.token]);
 
   return (
-    <div className="container mx-auto px-5 py-10">
-      <div className="mb-8 flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-slate-800">Başvurularım</h1>
-        <p className="text-slate-500">
-          Başvurduğun ilanları buradan takip edebilirsin.
+    <PageContainer>
+      <div className="mb-6 grid gap-4 rounded-panel border border-slate-200/80 bg-white p-5 shadow-card md:grid-cols-[1fr_auto] md:items-end">
+        <PageTitle subtitle="Başvurularının durumunu buradan takip edebilirsin.">
+          Başvurularım
+        </PageTitle>
+        <p className="text-sm text-textSecondary">
+          <span className="font-semibold text-textPrimary">{applications.length}</span>{" "}
+          başvuru
         </p>
       </div>
 
@@ -54,34 +57,26 @@ const Applications = () => {
           <Loading />
         </div>
       ) : applications.length > 0 ? (
-        <>
-          <p className="mb-5 text-sm text-slate-500">
-            Toplam{" "}
-            <span className="font-semibold text-slate-800">
-              {applications.length}
-            </span>{" "}
-            başvuru bulundu.
-          </p>
+        <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {applications.map((job) => {
+            const data = {
+              name: job?.company?.name,
+              logo: job?.company?.profileUrl,
+              ...job,
+            };
 
-          <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {applications.map((job) => {
-              const data = {
-                name: job?.company?.name,
-                logo: job?.company?.profileUrl,
-                ...job,
-              };
-
-              return (
-                <div key={job?._id} className="flex flex-col gap-3">
-                  <div className="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                    {getApplicationStatusLabel(job?.applicationStatusValue)}
-                  </div>
-                  <JobCard job={data} />
-                </div>
-              );
-            })}
-          </div>
-        </>
+            return (
+              <JobCard
+                key={job?._id}
+                job={data}
+                variant="application"
+                statusLabel={getApplicationStatusLabel(job?.applicationStatusValue)}
+                statusTone={getApplicationStatusTone(job?.applicationStatusValue)}
+                meta="Başvuru takipte"
+              />
+            );
+          })}
+        </div>
       ) : (
         <>
           <EmptyState
@@ -90,10 +85,10 @@ const Applications = () => {
             actionLabel="İlanları keşfet"
             onAction={() => navigate("/find-jobs")}
           />
-          {message && <p className="mt-3 text-sm text-red-500">{message}</p>}
+          {message && <p className="mt-3 text-sm text-danger">{message}</p>}
         </>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
-import { AiOutlineSafetyCertificate } from "react-icons/ai";
+import { FiDollarSign, FiBriefcase, FiClock, FiMapPin, FiShield } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
-import { CustomButton, JobCard, Loading } from "../components";
+import toast from "react-hot-toast";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  ConfirmDialog,
+  JobCard,
+  Loading,
+  PageContainer,
+} from "../components";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../utils";
 import {
@@ -19,6 +29,8 @@ const JobDetail = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [applyMessage, setApplyMessage] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const getJobDetails = async () => {
     setIsFetching(true);
@@ -39,25 +51,28 @@ const JobDetail = () => {
   };
 
   const handleDeletePost = async () => {
-    setIsFetching(true);
+    setIsDeleting(true);
 
     try {
-      if (window.confirm("Bu iş ilanını silmek istiyor musun?")) {
-        const res = await apiRequest({
-          url: "/jobs/delete-job/" + job?._id,
-          token: user?.token,
-          method: "DELETE",
-        });
+      const res = await apiRequest({
+        url: "/jobs/delete-job/" + job?._id,
+        token: user?.token,
+        method: "DELETE",
+      });
 
-        if (res?.success) {
-          alert(res?.message);
-          window.location.replace("/");
-        }
+      if (res?.success) {
+        toast.success(res?.message || "İlan başarıyla silindi.");
+        window.location.replace("/");
+        return;
       }
-      setIsFetching(false);
+
+      toast.error(res?.message || "İlan silinirken bir hata oluştu.");
     } catch (error) {
-      setIsFetching(false);
       console.log(error);
+      toast.error("İlan silinirken bir hata oluştu.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -65,6 +80,23 @@ const JobDetail = () => {
     (applicantId) => applicantId?.toString() === user?._id
   );
   const canApply = user?.accountType === "seeker";
+  const detailStats = [
+    {
+      label: "Maaş",
+      value: `${formatSalary(job?.salary)} TL`,
+      icon: <FiDollarSign />,
+    },
+    {
+      label: "İş türü",
+      value: getJobTypeLabel(job?.jobType),
+      icon: <FiBriefcase />,
+    },
+    {
+      label: "Deneyim",
+      value: job?.experience || "-",
+      icon: <FiClock />,
+    },
+  ];
 
   const handleApplyJob = async () => {
     if (!user?.token) {
@@ -102,180 +134,172 @@ const JobDetail = () => {
   }, [id]);
 
   return (
-    <div className="container mx-auto px-5 py-8">
+    <PageContainer>
       <div className="flex w-full flex-col gap-8 xl:flex-row">
         {/* LEFT SIDE */}
 
         {isFetching ? (
           <Loading />
         ) : (
-          <div className="h-fit w-full rounded-xl border border-slate-100 bg-white px-5 py-8 shadow-sm md:px-10 xl:flex-1">
-            <div className="flex w-full items-start justify-between gap-4">
-              <div className="flex min-w-0 gap-3">
-                <img
-                  src={job?.company?.profileUrl}
-                  alt={job?.company?.name}
-                  className="h-20 w-20 rounded-xl object-cover md:w-24"
-                />
+          <Card padding="none" className="h-fit w-full overflow-hidden border-slate-200/80 bg-white xl:flex-1">
+            <div className="border-b border-border px-5 py-6 md:px-8">
+              <div className="flex w-full flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                <div className="flex min-w-0 gap-4">
+                  <Avatar
+                    src={job?.company?.profileUrl}
+                    alt={job?.company?.name}
+                    size="xl"
+                    shape="square"
+                    ring
+                  />
 
-                <div className="flex min-w-0 flex-col">
-                  <p className="text-xl font-semibold text-slate-700">
-                    {job?.jobTitle}
-                  </p>
+                  <div className="flex min-w-0 flex-col">
+                    <p className="text-base font-semibold leading-6 text-textPrimary">
+                      {job?.jobTitle}
+                    </p>
 
-                  <span className="text-base">{job?.location}</span>
+                    <span className="mt-1 text-sm font-medium text-primary">
+                      {job?.company?.name}
+                    </span>
 
-                  <span className="text-base text-blue-600">
-                    {job?.company?.name}
-                  </span>
-
-                  <span className="text-gray-500 text-sm">
-                    {formatRelativeTime(job?.createdAt)}
-                  </span>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-textSecondary">
+                      <span className="inline-flex items-center gap-1">
+                        <FiMapPin /> {job?.location || "Konum yok"}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <FiClock /> {formatRelativeTime(job?.createdAt)}
+                      </span>
+                      <Badge tone="success" size="sm" className="gap-1">
+                        <FiShield /> Doğrulanmış ilan
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="">
-                <AiOutlineSafetyCertificate className="text-3xl text-blue-500" />
+            <div className="grid gap-3 px-5 py-5 md:grid-cols-3 md:px-8">
+              {detailStats.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center gap-3 rounded-card border border-border bg-surface-subtle px-4 py-3"
+                >
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-white text-primary shadow-card">
+                    {item.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-medium text-textSecondary">
+                      {item.label}
+                    </span>
+                    <span className="block truncate text-sm font-semibold text-textPrimary">
+                      {item.value}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-b border-border px-5 md:px-8">
+              <div className="flex gap-6">
+                {[
+                  { id: "0", label: "İş ilanı hakkında" },
+                  { id: "1", label: "Şirket" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSelected(tab.id)}
+                    className={`border-b-2 px-1 py-4 text-sm font-semibold transition ${
+                      selected === tab.id
+                        ? "border-primary text-primary"
+                        : "border-transparent text-textSecondary hover:text-textPrimary"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="my-10 grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              <div className="flex h-20 flex-col items-center justify-center rounded-xl bg-emerald-50">
-                <span className="text-sm">Maaş</span>
-                <p className="text-lg font-semibold text-gray-700">
-                  {formatSalary(job?.salary)} TL
-                </p>
-              </div>
-
-              <div className="flex h-20 flex-col items-center justify-center rounded-xl bg-sky-50">
-                <span className="text-sm">İş Türü</span>
-                <p className="text-lg font-semibold text-gray-700">
-                  {getJobTypeLabel(job?.jobType)}
-                </p>
-              </div>
-
-              {/* <div className="bg-[#fed0ab] w-72 h-16 px-6 rounded-lg flex flex-col items-center justify-center">
-                <span className="text-sm">No. of Applicants</span>
-                <p className="text-lg font-semibold text-gray-700">
-                  {job?.application?.length}
-                </p>
-              </div> */}
-
-              {/* <div className="bg-[#cecdff] w-72 h-16 px-6 rounded-lg flex flex-col items-center justify-center">
-                <span className="text-sm">No. of Vacancies</span>
-                <p className="text-lg font-semibold text-gray-700">
-                  {job?.vacancies}
-                </p>
-              </div> */}
-
-              <div className="flex h-20 flex-col items-center justify-center rounded-xl bg-rose-50 px-6">
-                <span className="text-sm">Deneyim</span>
-                <p className="text-lg font-semibold text-gray-700">
-                  {job?.experience}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid w-full gap-3 py-5 sm:grid-cols-2">
-              <CustomButton
-                onClick={() => setSelected("0")}
-                title="İş ilanı hakkında"
-                containerStyles={`w-full flex items-center justify-center py-3 px-5 outline-none rounded-full text-sm font-semibold transition ${
-                  selected === "0"
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                    : "bg-white text-blue-600 border border-blue-200 hover:border-blue-600 hover:bg-blue-50"
-                }`}
-              />
-
-              <CustomButton
-                onClick={() => setSelected("1")}
-                title="Şirket"
-                containerStyles={`w-full flex items-center justify-center py-3 px-5 outline-none rounded-full text-sm font-semibold transition ${
-                  selected === "1"
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                    : "bg-white text-blue-600 border border-blue-200 hover:border-blue-600 hover:bg-blue-50"
-                }`}
-              />
-            </div>
-
-            <div className="my-6 leading-7 text-slate-700">
+            <div className="px-5 py-6 leading-7 text-textPrimary md:px-8">
               {selected === "0" ? (
                 <>
-                  {/* <p className="text-xl font-semibold">Job Decsription</p> */}
+                  <section>
+                    <p className="text-base font-semibold">İş tanımı</p>
+                    <p className="mt-3 text-sm leading-7 text-textSecondary">
+                      {job?.detail?.[0]?.desc}
+                    </p>
+                  </section>
 
-                  <span className="text-base">{job?.detail[0]?.desc}</span>
-
-                  {job?.detail[0]?.requirements && (
-                    <>
-                      <p className="text-xl font-semibold mt-8">Gereklilikler</p>
-                      <span className="text-base">
-                        {job?.detail[0]?.requirements}
-                      </span>
-                    </>
+                  {job?.detail?.[0]?.requirements && (
+                    <section className="mt-8">
+                      <p className="text-base font-semibold">Gereklilikler</p>
+                      <p className="mt-3 text-sm leading-7 text-textSecondary">
+                        {job?.detail?.[0]?.requirements}
+                      </p>
+                    </section>
                   )}
                 </>
               ) : (
                 <>
                   <div className="mb-6 flex flex-col">
-                    <p className="text-xl text-blue-600 font-semibold">
+                    <p className="text-base font-semibold text-primary">
                       {job?.company?.name}
                     </p>
-                    <span className="text-base">{job?.company?.location}</span>
+                    <span className="text-sm">{job?.company?.location}</span>
                     <span className="text-sm">{job?.company?.email}</span>
                   </div>
 
-                  <p className="text-xl font-semibold">Şirket hakkında</p>
-                  <span>{job?.company?.about}</span>
+                  <p className="text-base font-semibold">Şirket hakkında</p>
+                  <p className="mt-3 text-sm leading-7 text-textSecondary">
+                    {job?.company?.about}
+                  </p>
                 </>
               )}
             </div>
 
-            <div className="flex w-full justify-end">
+            <div className="flex w-full justify-end border-t border-border px-5 py-5 md:px-8">
               {user?._id === job?.company?._id ? (
                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                   <Link
                     to={`/edit-job/${job?._id}`}
-                    className="flex w-full items-center justify-center rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
+                    className="inline-flex h-10 items-center justify-center rounded-control bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary-hover"
                   >
                     Düzenle
                   </Link>
 
-                  <CustomButton
-                    title="Sil"
-                    onClick={handleDeletePost}
-                    containerStyles="w-full sm:w-auto flex items-center justify-center border border-red-200 bg-white px-5 py-2 text-sm font-semibold text-red-600 outline-none rounded-full transition hover:border-red-300 hover:bg-red-50"
-                  />
+                  <Button
+                    variant="outline"
+                    className="border-danger/30 text-danger hover:bg-danger-subtle"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    Sil
+                  </Button>
                 </div>
               ) : !canApply ? (
-                <div className="flex w-full justify-end">
-                  <CustomButton
-                    title="Aday hesabı ile başvur"
-                    containerStyles="w-full flex items-center justify-center border border-blue-100 bg-blue-50 px-5 py-3 text-base font-semibold text-blue-700 outline-none rounded-full cursor-not-allowed"
-                  />
-                </div>
+                <p className="w-full rounded-card bg-surface-subtle px-4 py-3 text-center text-sm font-medium text-textSecondary">
+                  Başvuru yapmak için aday hesabı ile giriş yapmalısın.
+                </p>
+              ) : hasApplied ? (
+                <p className="w-full rounded-card bg-primary-subtle px-4 py-3 text-center text-sm font-semibold text-primary">
+                  Başvuruldu
+                </p>
               ) : (
                 <div className="flex w-full flex-col items-end gap-2">
-                  <CustomButton
-                    title={
-                      isApplying
-                        ? "Başvuruluyor..."
-                        : hasApplied
-                        ? "Başvuruldu"
-                        : "Başvur"
-                    }
-                    onClick={hasApplied || isApplying ? undefined : handleApplyJob}
-                    containerStyles={`w-full flex items-center justify-center py-3 px-5 outline-none rounded-full text-base font-semibold transition ${
-                      hasApplied
-                        ? "bg-blue-50 text-blue-700 border border-blue-100 cursor-not-allowed"
-                        : "text-white bg-blue-600 hover:bg-blue-700"
-                    }`}
-                  />
+                  <Button
+                    variant="primary"
+                    fullWidth
+                    size="lg"
+                    loading={isApplying}
+                    onClick={isApplying ? undefined : handleApplyJob}
+                  >
+                    {isApplying ? "Başvuruluyor..." : "Başvur"}
+                  </Button>
 
                   {applyMessage && (
                     <p
                       className={`text-sm ${
-                        hasApplied ? "text-blue-600" : "text-slate-500"
+                        hasApplied ? "text-primary" : "text-textSecondary"
                       }`}
                     >
                       {applyMessage}
@@ -284,26 +308,37 @@ const JobDetail = () => {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
         )}
 
         {/* RIGHT SIDE */}
         <aside className="w-full xl:w-80 2xl:w-96 xl:shrink-0">
-          <p className="font-semibold text-slate-600">Benzer iş ilanları</p>
+          <p className="font-semibold text-textPrimary">Benzer iş ilanları</p>
 
-          <div className="mt-3 grid w-full gap-5 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="mt-3 grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-1">
             {similarJobs?.slice(0, 6).map((job, index) => {
               const data = {
                 name: job?.company.name,
                 logo: job?.company.profileUrl,
                 ...job,
               };
-              return <JobCard job={data} key={index} />;
+              return <JobCard job={data} key={index} variant="compact" />;
             })}
           </div>
         </aside>
       </div>
-    </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="İlanı silmek istediğine emin misin?"
+        description="Bu işlem geri alınamaz, ilan ve başvuru geçmişi kalıcı olarak silinir."
+        confirmLabel="İlanı sil"
+        cancelLabel="Vazgeç"
+        isLoading={isDeleting}
+        onConfirm={handleDeletePost}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+    </PageContainer>
   );
 };
 

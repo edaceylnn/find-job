@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FiBriefcase, FiMapPin, FiX } from "react-icons/fi";
 import {
+  Button,
   CompanyCard,
-  CustomButton,
   EmptyState,
   Header,
   ListBox,
   Loading,
+  PageContainer,
 } from "../components";
 import { apiRequest, updateUrl } from "../utils";
+import { useDebounce } from "../utils/useDebounce";
 
 const Companies = () => {
   const [page, setPage] = useState(1);
@@ -19,6 +22,9 @@ const Companies = () => {
   const [cmpLocation, setCmpLocation] = useState("");
   const [sort, setSort] = useState("Newest");
   const [isFetching, setIsFetching] = useState(false);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 400);
+  const debouncedCmpLocation = useDebounce(cmpLocation, 400);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,7 +49,9 @@ const Companies = () => {
 
       setNumPage(res?.numOfPage);
       setRecordsCount(res?.total);
-      setData(res?.data);
+      setData((prev) =>
+        page === 1 ? res?.data ?? [] : [...(prev ?? []), ...(res?.data ?? [])]
+      );
 
       setIsFetching(false);
     } catch (error) {
@@ -58,10 +66,18 @@ const Companies = () => {
   };
 
   const handleShowMore = () => setPage((prev) => prev + 1);
+  const activeFilterCount = (searchQuery ? 1 : 0) + (cmpLocation ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCmpLocation("");
+    setPage(1);
+    navigate("/companies");
+  };
 
   useEffect(() => {
     fetchCompanies();
-  }, [page, sort, searchQuery, cmpLocation]);
+  }, [page, sort, debouncedSearchQuery, debouncedCmpLocation]);
 
   return (
     <div className="w-full">
@@ -69,22 +85,56 @@ const Companies = () => {
         title="Çalışmak istedigin şirketi bul"
         handleClick={handleSearchSubmit}
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={(value) => {
+          setPage(1);
+          setSearchQuery(value);
+        }}
         location={cmpLocation}
-        setLocation={setCmpLocation}
+        setLocation={(value) => {
+          setPage(1);
+          setCmpLocation(value);
+        }}
       />
 
-      <div className="container mx-auto flex flex-col gap-5 bg-white px-5 py-8 2xl:gap-10">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm md:text-base text-slate-600">
-            <span className="font-semibold text-slate-900">{recordsCount}</span>{" "}
-            şirket bulundu
-          </p>
+      <PageContainer className="flex flex-col gap-5 2xl:gap-10">
+        <div className="grid gap-3 rounded-panel border border-slate-200/80 bg-white/90 p-4 shadow-card md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.08em] text-textSecondary">
+              Şirket keşfi
+            </p>
+            <p className="mt-1 text-base font-semibold text-textPrimary">
+              {recordsCount} şirket bulundu
+            </p>
+          </div>
 
           <div className="flex items-center gap-2">
-            <ListBox sort={sort} setSort={setSort} />
+            <ListBox
+              sort={sort}
+              setSort={(value) => {
+                setPage(1);
+                setSort(value);
+              }}
+            />
           </div>
         </div>
+
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {searchQuery && (
+              <span className="inline-flex items-center gap-2 rounded-control bg-white px-3 py-1.5 text-sm font-medium text-textPrimary shadow-card">
+                <FiBriefcase /> {searchQuery}
+              </span>
+            )}
+            {cmpLocation && (
+              <span className="inline-flex items-center gap-2 rounded-control bg-white px-3 py-1.5 text-sm font-medium text-textPrimary shadow-card">
+                <FiMapPin /> {cmpLocation}
+              </span>
+            )}
+            <Button variant="ghost" size="sm" iconLeft={<FiX />} onClick={clearFilters}>
+              Temizle
+            </Button>
+          </div>
+        )}
 
         <div className="w-full flex flex-col gap-6">
           {!isFetching && data?.length === 0 ? (
@@ -93,10 +143,7 @@ const Companies = () => {
               description="Arama veya konum filtresini değiştirerek tekrar deneyebilirsin. Yeni şirketler eklendikçe burada listelenecek."
               actionLabel="Filtreleri temizle"
               onAction={() => {
-                setSearchQuery("");
-                setCmpLocation("");
-                setPage(1);
-                navigate("/companies");
+                clearFilters();
               }}
             />
           ) : (
@@ -110,22 +157,20 @@ const Companies = () => {
           )}
 
           {data?.length > 0 && (
-            <p className="text-sm text-right">
+            <p className="text-right text-sm text-textSecondary">
               {recordsCount} kayıttan {data?.length} tanesi gösteriliyor
             </p>
           )}
         </div>
 
         {numPage > page && !isFetching && (
-          <div className="w-full flex items-center justify-center pt-16">
-            <CustomButton
-              onClick={handleShowMore}
-              title="Daha fazla yükle"
-              containerStyles="text-blue-600 py-2 px-6 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600 transition"
-            />
+          <div className="flex w-full items-center justify-center pt-16">
+            <Button variant="secondary" size="lg" onClick={handleShowMore}>
+              Daha fazla yükle
+            </Button>
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 };

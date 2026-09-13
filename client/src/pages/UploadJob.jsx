@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  CustomButton,
+  Button,
+  Card,
+  Input,
   JobCard,
   JobTypes,
   Loading,
-  TextInput,
+  PageContainer,
+  Textarea,
 } from "../components";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../utils";
@@ -142,191 +145,157 @@ const UploadJob = () => {
   }
 
   return (
-    <div className="container mx-auto flex flex-col gap-8 bg-white px-5 py-8 lg:flex-row 2xl:gap-14">
-      <div
-        className={`h-fit w-full rounded-xl border border-slate-100 bg-white px-5 py-8 shadow-sm md:px-10 ${
-          isEditMode ? "lg:w-full" : "lg:w-2/3"
-        }`}
-      >
+    <PageContainer className="flex flex-col gap-8 bg-white lg:flex-row 2xl:gap-14">
+      <Card className={`h-fit w-full px-5 py-8 md:px-10 ${isEditMode ? "lg:w-full" : "lg:w-2/3"}`}>
         <div>
-          <p className="text-2xl font-semibold text-slate-700">
+          <p className="text-base font-semibold text-textPrimary">
             {isEditMode ? "İlanı düzenle" : "Yeni ilan yayınla"}
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-textSecondary">
             {isEditMode
               ? "Yayındaki ilan bilgilerini güncelleyebilirsin."
               : "Adayların başvurabileceği yeni bir ilan oluştur."}
           </p>
 
           <form
-            className="w-full mt-2 flex flex-col gap-8"
+            className="mt-2 flex w-full flex-col gap-8"
             onSubmit={handleSubmit(onSubmit)}
           >
-            <TextInput
+            <Input
               name="jobTitle"
               label="Pozisyon"
               placeholder="Örn. Frontend Developer"
-              type="text"
-              required={true}
+              required
               register={register("jobTitle", {
                 required: "Pozisyon zorunludur.",
               })}
-              error={errors.jobTitle ? errors.jobTitle?.message : ""}
+              error={errors.jobTitle?.message}
             />
 
             <div className="grid w-full gap-4 md:grid-cols-2">
-              <div className="mt-2">
-                <label className="text-gray-600 text-sm mb-1">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-textPrimary">
                   Çalışma türü
                 </label>
                 <JobTypes jobTitle={jobType} setJobTitle={setJobType} />
               </div>
 
-              <div>
-                <TextInput
-                  name="salary"
-                  label="Maaş (TL)"
-                  placeholder="Örn. 45000"
-                  type="number"
-                  min="0"
-                  step="1000"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  register={register("salary", {
-                    required: "Maaş bilgisi zorunludur.",
-                    valueAsNumber: true,
-                  })}
-                  error={errors.salary ? errors.salary?.message : ""}
-                />
-              </div>
+              <Input
+                name="salary"
+                label="Maaş (TL)"
+                placeholder="Örn. 45000"
+                type="number"
+                min="0"
+                step="1000"
+                onWheel={(e) => e.currentTarget.blur()}
+                register={register("salary", {
+                  required: "Maaş bilgisi zorunludur.",
+                  valueAsNumber: true,
+                })}
+                error={errors.salary?.message}
+              />
             </div>
 
             <div className="grid w-full gap-4 md:grid-cols-2">
-              <div>
-                <TextInput
-                  name="vacancies"
-                  label="Açık pozisyon sayısı"
-                  placeholder="Örn. 2"
-                  type="number"
-                  min="1"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  register={register("vacancies", {
-                    required: "Açık pozisyon sayısı zorunludur.",
-                    valueAsNumber: true,
-                  })}
-                  error={errors.vacancies ? errors.vacancies?.message : ""}
-                />
-              </div>
+              <Input
+                name="vacancies"
+                label="Açık pozisyon sayısı"
+                placeholder="Örn. 2"
+                type="number"
+                min="1"
+                onWheel={(e) => e.currentTarget.blur()}
+                register={register("vacancies", {
+                  required: "Açık pozisyon sayısı zorunludur.",
+                  valueAsNumber: true,
+                })}
+                error={errors.vacancies?.message}
+              />
 
-              <div>
-                <TextInput
-                  name="experience"
-                  label="Deneyim yılı"
-                  placeholder="Örn. 3"
-                  type="number"
-                  min="0"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  register={register("experience", {
-                    required: "Deneyim bilgisi zorunludur.",
-                    valueAsNumber: true,
-                  })}
-                  error={errors.experience ? errors.experience?.message : ""}
-                />
-              </div>
+              <Input
+                name="experience"
+                label="Deneyim yılı"
+                placeholder="Örn. 3"
+                type="number"
+                min="0"
+                onWheel={(e) => e.currentTarget.blur()}
+                register={register("experience", {
+                  required: "Deneyim bilgisi zorunludur.",
+                  valueAsNumber: true,
+                })}
+                error={errors.experience?.message}
+              />
             </div>
 
-            <TextInput
+            <Input
               name="location"
               label="Konum"
               placeholder="Örn. İstanbul"
-              type="text"
               register={register("location", {
                 required: "Konum zorunludur.",
               })}
-              error={errors.location ? errors.location?.message : ""}
+              error={errors.location?.message}
             />
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">
-                İş açıklaması
-              </label>
-              <textarea
-                className="rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2 resize-none"
-                rows={4}
-                cols={6}
-                {...register("desc", {
-                  required: "İş açıklaması zorunludur.",
-                })}
-                aria-invalid={errors.desc ? "true" : "false"}
-              ></textarea>
-              {errors.desc && (
-                <span role="alert" className="text-xs text-red-500 mt-0.5">
-                  {errors.desc?.message}
-                </span>
-              )}
-            </div>
 
-            <div className="flex flex-col">
-              <label className="text-gray-600 text-sm mb-1">
-                Gereklilikler
-              </label>
-              <textarea
-                className="rounded border border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base px-4 py-2 resize-none"
-                rows={4}
-                cols={6}
-                {...register("requirements", {
-                  required: "Gereklilikler zorunludur.",
-                })}
-              ></textarea>
-              {errors.requirements && (
-                <span role="alert" className="text-xs text-red-500 mt-0.5">
-                  {errors.requirements?.message}
-                </span>
-              )}
-            </div>
+            <Textarea
+              name="desc"
+              label="İş açıklaması"
+              register={register("desc", {
+                required: "İş açıklaması zorunludur.",
+              })}
+              error={errors.desc?.message}
+            />
+
+            <Textarea
+              name="requirements"
+              label="Gereklilikler"
+              register={register("requirements", {
+                required: "Gereklilikler zorunludur.",
+              })}
+              error={errors.requirements?.message}
+            />
 
             {errMsg && (
               <span
                 role="alert"
-                className={`text-sm mt-0.5 ${
-                  errMsg.status === "success" ? "text-blue-600" : "text-red-500"
+                className={`mt-0.5 text-sm ${
+                  errMsg.status === "success" ? "text-primary" : "text-danger"
                 }`}
               >
                 {errMsg.message}
               </span>
             )}
+
             <div className="mt-2">
-              {isLoading ? (
-                <Loading />
-              ) : (
-                <CustomButton
-                  type="submit"
-                  containerStyles="inline-flex justify-center rounded-full border border-transparent bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none"
-                  title={isEditMode ? "Güncelle" : "Yayınla"}
-                />
-              )}
+              <Button type="submit" size="lg" loading={isLoading}>
+                {isEditMode ? "Güncelle" : "Yayınla"}
+              </Button>
             </div>
           </form>
         </div>
-      </div>
-      {!isEditMode && <div className="w-full p-0 lg:w-1/3 lg:p-5">
-        <p className="mb-4 font-semibold text-slate-600">
-          Son yayınlanan ilanlar
-        </p>
+      </Card>
 
-        <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-1">
-          {(Array.isArray(recentPost) ? recentPost : [])
-            .slice(0, 4)
-            .map((job, index) => {
-              const data = {
-                name: user?.name,
-                email: user?.email,
-                logo: user?.profileUrl,
-                ...job,
-              };
-              return <JobCard job={data} key={index} />;
-            })}
+      {!isEditMode && (
+        <div className="w-full p-0 lg:w-1/3 lg:p-5">
+          <p className="mb-4 font-semibold text-textSecondary">
+            Son yayınlanan ilanlar
+          </p>
+
+          <div className="grid w-full gap-5 sm:grid-cols-2 lg:grid-cols-1">
+            {(Array.isArray(recentPost) ? recentPost : [])
+              .slice(0, 4)
+              .map((job, index) => {
+                const data = {
+                  name: user?.name,
+                  email: user?.email,
+                  logo: user?.profileUrl,
+                  ...job,
+                };
+                return <JobCard job={data} key={index} />;
+              })}
+          </div>
         </div>
-      </div>}
-    </div>
+      )}
+    </PageContainer>
   );
 };
 

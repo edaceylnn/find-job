@@ -1,18 +1,34 @@
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { HiLocationMarker } from "react-icons/hi";
 import { AiOutlineMail } from "react-icons/ai";
-import { FiCamera, FiPhoneCall, FiX } from "react-icons/fi";
-import { CustomButton, EmptyState, Loading, TextInput } from "../components";
+import {
+  FiBookmark,
+  FiCamera,
+  FiEdit3,
+  FiFileText,
+  FiPhoneCall,
+  FiSend,
+} from "react-icons/fi";
+import toast from "react-hot-toast";
+import {
+  Avatar,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  Loading,
+  Modal,
+  PageContainer,
+  Textarea,
+} from "../components";
 import { NoProfile } from "../assets";
 import { apiRequest, handleFileUpload } from "../utils";
 import { Login } from "../redux/userSlice";
 
-const inputStyles =
-  "rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100";
+const USER_FORM_ID = "user-profile-form";
 
 const UserForm = ({ open, setOpen }) => {
   const { user } = useSelector((state) => state.user);
@@ -27,6 +43,7 @@ const UserForm = ({ open, setOpen }) => {
   const dispatch = useDispatch();
   const [profileImage, setProfileImage] = useState("");
   const [profilePreview, setProfilePreview] = useState(user?.profileUrl || "");
+  const [cvFile, setCvFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleProfileImageChange = (file) => {
@@ -40,9 +57,24 @@ const UserForm = ({ open, setOpen }) => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const url = profileImage && (await handleFileUpload(profileImage));
+      const uploadedProfileUrl =
+        profileImage && (await handleFileUpload(profileImage));
 
-      const newData = url ? { ...data, profileUrl: url } : data;
+      let uploadedCvUrl = user?.cvUrl || "";
+      if (cvFile) {
+        uploadedCvUrl = await handleFileUpload(cvFile, "raw");
+        if (!uploadedCvUrl) {
+          toast.error("CV yüklenemedi, lütfen tekrar dene.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      const newData = {
+        ...data,
+        ...(uploadedProfileUrl ? { profileUrl: uploadedProfileUrl } : {}),
+        cvUrl: uploadedCvUrl,
+      };
 
       const res = await apiRequest({
         url: "/users/update-user",
@@ -52,10 +84,10 @@ const UserForm = ({ open, setOpen }) => {
       });
 
       if (res) {
-        const newData = { token: res?.token, ...res?.user };
+        const updated = { token: res?.token, ...res?.user };
 
-        dispatch(Login(newData));
-        localStorage.setItem("userInfo", JSON.stringify(newData));
+        dispatch(Login(updated));
+        localStorage.setItem("userInfo", JSON.stringify(updated));
         window.location.reload();
       }
       setIsSubmitting(false);
@@ -68,219 +100,159 @@ const UserForm = ({ open, setOpen }) => {
   const closeModal = () => setOpen(false);
 
   return (
-    <>
-      <Transition appear show={open ?? false} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={closeModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm" />
-          </Transition.Child>
+    <Modal
+      open={open}
+      onClose={closeModal}
+      title="Profili düzenle"
+      description="Aday profilindeki bilgileri güncelle."
+      size="lg"
+      footer={
+        <>
+          <Button type="button" variant="outline" onClick={closeModal}>
+            İptal
+          </Button>
+          <Button type="submit" form={USER_FORM_ID} loading={isSubmitting}>
+            Değişiklikleri kaydet
+          </Button>
+        </>
+      }
+    >
+      <form
+        id={USER_FORM_ID}
+        className="flex w-full flex-col gap-5"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div className="flex flex-col gap-4 rounded-card bg-surface-subtle p-4 sm:flex-row sm:items-center">
+          <img
+            src={profilePreview || user?.profileUrl || NoProfile}
+            alt={user?.firstName}
+            className="h-20 w-20 rounded-panel bg-white object-cover ring-1 ring-slate-200"
+          />
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-textPrimary">
+              Profil fotoğrafı
+            </p>
+            <p className="mt-1 text-xs leading-5 text-textSecondary">
+              Kare formatlı, net bir fotoğraf daha iyi görünür.
+            </p>
+            <Button
+              as="label"
+              variant="outline"
+              size="sm"
+              iconLeft={<FiCamera />}
+              className="mt-3"
+            >
+              Fotoğraf seç
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleProfileImageChange(e.target.files[0])}
+              />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-card bg-surface-subtle p-4 sm:flex-row sm:items-center">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-white text-primary ring-1 ring-slate-200">
+            <FiFileText className="text-base" />
+          </div>
+
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-textPrimary">
+              Özgeçmiş (CV)
+            </p>
+            <p className="mt-1 text-xs leading-5 text-textSecondary">
+              {cvFile
+                ? cvFile.name
+                : user?.cvUrl
+                ? "Bir CV yüklü."
+                : "Henüz CV yüklemedin."}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Button
+                as="label"
+                variant="outline"
+                size="sm"
+                iconLeft={<FiFileText />}
               >
-                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl transition-all">
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
-                    <div>
-                      <Dialog.Title
-                        as="h3"
-                        className="text-xl font-bold leading-6 text-slate-900"
-                      >
-                        Profili düzenle
-                      </Dialog.Title>
-                      <p className="mt-2 text-sm text-slate-500">
-                        Aday profilindeki bilgileri güncelle.
-                      </p>
-                    </div>
+                {user?.cvUrl || cvFile ? "CV'yi değiştir" : "CV yükle"}
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={(e) => setCvFile(e.target.files[0])}
+                />
+              </Button>
 
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                      aria-label="Kapat"
-                    >
-                      <FiX />
-                    </button>
-                  </div>
-
-                  <form
-                    className="w-full flex flex-col gap-5 px-6 py-6"
-                    onSubmit={handleSubmit(onSubmit)}
-                  >
-                    <div className="flex flex-col gap-4 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center">
-                      <img
-                        src={profilePreview || user?.profileUrl || NoProfile}
-                        alt={user?.firstName}
-                        className="h-20 w-20 rounded-2xl bg-white object-cover ring-1 ring-slate-200"
-                      />
-
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-slate-700">
-                          Profil fotoğrafı
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-slate-500">
-                          Kare formatlı, net bir fotoğraf daha iyi görünür.
-                        </p>
-                        <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-600 transition hover:border-blue-600 hover:bg-blue-50">
-                          <FiCamera />
-                          Fotoğraf seç
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) =>
-                              handleProfileImageChange(e.target.files[0])
-                            }
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="grid w-full gap-4 md:grid-cols-2">
-                      <div>
-                        <TextInput
-                          name="firstName"
-                          label="Ad"
-                          placeholder="Eda"
-                          type="text"
-                          styles={inputStyles}
-                          register={register("firstName", {
-                            required: "Ad zorunludur.",
-                          })}
-                          error={
-                            errors.firstName ? errors.firstName?.message : ""
-                          }
-                        />
-                      </div>
-                      <div>
-                        <TextInput
-                          name="lastName"
-                          label="Soyad"
-                          placeholder="Ceylan"
-                          type="text"
-                          styles={inputStyles}
-                          register={register("lastName", {
-                            required: "Soyad zorunludur.",
-                          })}
-                          error={
-                            errors.lastName ? errors.lastName?.message : ""
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid w-full gap-4 md:grid-cols-2">
-                      <div>
-                        <TextInput
-                          name="contact"
-                          label="Telefon"
-                          placeholder="Telefon numarası"
-                          type="text"
-                          styles={inputStyles}
-                          register={register("contact", {
-                            required: "Telefon zorunludur.",
-                          })}
-                          error={errors.contact ? errors.contact?.message : ""}
-                        />
-                      </div>
-
-                      <div>
-                        <TextInput
-                          name="location"
-                          label="Konum"
-                          placeholder="Konum"
-                          type="text"
-                          styles={inputStyles}
-                          register={register("location", {
-                            required: "Konum zorunludur.",
-                          })}
-                          error={
-                            errors.location ? errors.location?.message : ""
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <TextInput
-                      name="jobTitle"
-                      label="Unvan"
-                      placeholder="Frontend Developer"
-                      type="text"
-                      styles={inputStyles}
-                      register={register("jobTitle", {
-                        required: "Unvan zorunludur.",
-                      })}
-                      error={errors.jobTitle ? errors.jobTitle?.message : ""}
-                    />
-
-                    <div className="flex flex-col">
-                      <label className="mb-1 text-sm font-medium text-slate-600">
-                        Hakkında
-                      </label>
-                      <textarea
-                        className="min-h-[120px] resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                        rows={4}
-                        cols={6}
-                        placeholder="Kendini, hedeflerini ve güçlü yönlerini kısaca anlat."
-                        {...register("about", {
-                          required:
-                            "Kendin ve projelerin hakkında kısa bir metin yaz.",
-                        })}
-                        aria-invalid={errors.about ? "true" : "false"}
-                      ></textarea>
-                      {errors.about && (
-                        <span
-                          role="alert"
-                          className="text-xs text-red-500 mt-0.5"
-                        >
-                          {errors.about?.message}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-                      <CustomButton
-                        type="button"
-                        title="Vazgeç"
-                        onClick={closeModal}
-                        containerStyles="justify-center rounded-full border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-600 outline-none transition hover:bg-slate-50"
-                      />
-
-                      {isSubmitting ? (
-                        <div className="flex min-w-[120px] justify-center">
-                          <Loading />
-                        </div>
-                      ) : (
-                        <CustomButton
-                          type="submit"
-                          containerStyles="justify-center rounded-full border border-transparent bg-blue-600 px-7 py-2.5 text-sm font-semibold text-white outline-none transition hover:bg-blue-700"
-                          title={"Kaydet"}
-                        />
-                      )}
-                    </div>
-                  </form>
-                </Dialog.Panel>
-              </Transition.Child>
+              {user?.cvUrl && !cvFile && (
+                <a
+                  href={user.cvUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Mevcut CV&apos;yi görüntüle
+                </a>
+              )}
             </div>
           </div>
-        </Dialog>
-      </Transition>
-    </>
+        </div>
+
+        <div className="grid w-full gap-4 md:grid-cols-2">
+          <Input
+            name="firstName"
+            label="Ad"
+            placeholder="Eda"
+            register={register("firstName", { required: "Ad zorunludur." })}
+            error={errors.firstName?.message}
+          />
+          <Input
+            name="lastName"
+            label="Soyad"
+            placeholder="Ceylan"
+            register={register("lastName", { required: "Soyad zorunludur." })}
+            error={errors.lastName?.message}
+          />
+        </div>
+
+        <div className="grid w-full gap-4 md:grid-cols-2">
+          <Input
+            name="contact"
+            label="Telefon"
+            placeholder="Telefon numarası"
+            register={register("contact", { required: "Telefon zorunludur." })}
+            error={errors.contact?.message}
+          />
+          <Input
+            name="location"
+            label="Konum"
+            placeholder="Konum"
+            register={register("location", { required: "Konum zorunludur." })}
+            error={errors.location?.message}
+          />
+        </div>
+
+        <Input
+          name="jobTitle"
+          label="Unvan"
+          placeholder="Frontend Developer"
+          register={register("jobTitle", { required: "Unvan zorunludur." })}
+          error={errors.jobTitle?.message}
+        />
+
+        <Textarea
+          name="about"
+          label="Hakkında"
+          placeholder="Kendini, hedeflerini ve güçlü yönlerini kısaca anlat."
+          register={register("about", {
+            required: "Kendin ve projelerin hakkında kısa bir metin yaz.",
+          })}
+          error={errors.about?.message}
+        />
+      </form>
+    </Modal>
   );
 };
 
@@ -292,6 +264,37 @@ const UserProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const isOwnProfile = !params.id || params.id === user?._id;
   const userInfo = isOwnProfile ? user : viewedUser;
+  const contactItems = [
+    {
+      label: "Konum",
+      value: userInfo?.location ?? "Konum yok",
+      icon: <HiLocationMarker />,
+    },
+    {
+      label: "E-posta",
+      value: userInfo?.email ?? "E-posta yok",
+      icon: <AiOutlineMail />,
+    },
+    {
+      label: "Telefon",
+      value: userInfo?.contact ?? "Telefon yok",
+      icon: <FiPhoneCall />,
+    },
+  ];
+  const profileActions = [
+    {
+      label: "Başvurularım",
+      description: "Gönderdiğin başvuruları ve durumlarını takip et.",
+      to: "/applications",
+      icon: <FiSend />,
+    },
+    {
+      label: "Kaydedilen ilanlar",
+      description: "Sonra bakmak istediğin fırsatları burada tut.",
+      to: "/saved-jobs",
+      icon: <FiBookmark />,
+    },
+  ];
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -328,72 +331,148 @@ const UserProfile = () => {
 
   if (!userInfo) {
     return (
-      <div className="container mx-auto px-5 py-12">
+      <PageContainer>
         <EmptyState
           title="Aday bulunamadı"
           description="Görüntülemek istediğin aday profili kaldırılmış veya erişilemez olabilir."
         />
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="container mx-auto flex items-center justify-center px-5 py-10">
-      <div className="w-full rounded-xl border border-slate-100 bg-white p-6 pb-12 shadow-sm md:w-2/3 md:p-10 2xl:w-2/4">
-        <div className="flex flex-col items-center justify-center mb-4">
-          <h1 className="text-4xl font-semibold text-slate-600">
-            {userInfo?.firstName + " " + userInfo?.lastName}
-          </h1>
-
-          <h5 className="text-blue-700 text-base font-bold">
-            {userInfo?.jobTitle || "Unvan ekle"}
-          </h5>
-
-          <div className="w-full flex flex-wrap lg:flex-row justify-between mt-8 text-sm">
-            <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <HiLocationMarker /> {userInfo?.location ?? "Konum yok"}
-            </p>
-            <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <AiOutlineMail /> {userInfo?.email ?? "E-posta yok"}
-            </p>
-            <p className="flex gap-1 items-center justify-center  px-3 py-1 text-slate-600 rounded-full">
-              <FiPhoneCall /> {userInfo?.contact ?? "Telefon yok"}
-            </p>
-          </div>
-        </div>
-
-        <hr />
-
-        <div className="w-full py-10">
-          <div className="w-full flex flex-col-reverse md:flex-row gap-8 py-6">
-            <div className="w-full md:w-2/3 flex flex-col gap-4 text-lg text-slate-600 mt-20 md:mt-0">
-              <p className="text-2xl font-semibold text-blue-700">HAKKINDA</p>
-              <span className="text-base text-justify leading-7">
-                {userInfo?.about ?? "Hakkında bilgisi bulunmuyor."}
-              </span>
-            </div>
-
-            <div className="w-full md:w-1/3 h-44">
-              <img
-                src={userInfo?.profileUrl || NoProfile}
-                alt={userInfo?.firstName}
-                className="w-full h-48 object-contain rounded-lg"
-              />
-              <button
-                className={`w-full md:w-64 bg-blue-600 text-white mt-4 py-2 rounded ${
-                  isOwnProfile ? "" : "hidden"
-                }`}
+    <PageContainer as="main" className="space-y-8">
+      <section className="overflow-hidden rounded-panel border border-slate-200 bg-white">
+        <div className="relative p-5 md:p-6">
+          <div className="mb-5 flex flex-wrap gap-3 sm:absolute sm:right-5 sm:top-5 sm:mb-0 md:right-6 md:top-6">
+            {isOwnProfile && (
+              <Button
+                variant="primary"
+                iconLeft={<FiEdit3 />}
                 onClick={() => setOpen(true)}
               >
                 Profili düzenle
-              </button>
+              </Button>
+            )}
+            {userInfo?.cvUrl && (
+              <a
+                href={userInfo.cvUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-[42px] items-center justify-center gap-2 rounded-control border border-slate-300 bg-white px-5 text-sm font-semibold text-textPrimary transition hover:border-primary hover:text-primary"
+              >
+                <FiFileText /> CV görüntüle
+              </a>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <Avatar
+              src={userInfo?.profileUrl || NoProfile}
+              alt={userInfo?.firstName}
+              size="xl"
+              ring
+              className="h-20 w-20 shrink-0 border border-slate-200 bg-white md:h-24 md:w-24"
+            />
+
+            <div className="min-w-0 flex-1 sm:pr-64">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-textSecondary">
+                <span>Profil yayında</span>
+                {userInfo?.cvUrl && (
+                  <>
+                    <span className="text-slate-300">/</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <FiFileText />
+                      CV yüklü
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <h1 className="mt-2 truncate text-xl font-semibold leading-tight text-textPrimary md:text-2xl">
+                {userInfo?.firstName + " " + userInfo?.lastName}
+              </h1>
+              <p className="mt-1 text-sm font-medium text-primary">
+                {userInfo?.jobTitle || "Unvan ekle"}
+              </p>
+              <p className="mt-3 line-clamp-2 max-w-3xl text-sm leading-6 text-textSecondary">
+                {userInfo?.about ||
+                  (isOwnProfile
+                    ? "Kısa bir profesyonel özet ekleyerek işverenlerin seni ve güçlü yönlerini ilk bakışta anlamasını sağlayabilirsin."
+                    : "Bu adayın profesyonel özeti henüz eklenmemiş.")}
+              </p>
             </div>
           </div>
         </div>
-      </div>
+
+        <div className="grid gap-0 border-t border-slate-100 bg-white sm:grid-cols-2 md:grid-cols-3">
+          {contactItems.map((item) => (
+            <div
+              key={item.label}
+              className="flex min-w-0 items-center gap-3 border-b border-slate-100 px-5 py-4 last:border-b-0 md:border-b-0 md:border-r md:px-6 md:last:border-r-0"
+            >
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-card bg-surface-subtle text-primary">
+                {item.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-textSecondary">
+                  {item.label}
+                </p>
+                <p className="mt-0.5 truncate text-sm font-semibold text-textPrimary">
+                  {item.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <Card className="border-slate-200/80 bg-white p-0">
+          <div className="border-b border-slate-100 p-6 md:p-8">
+            <h2 className="text-xl font-semibold text-textPrimary">Hakkında</h2>
+          </div>
+
+          <div className="p-6 md:p-8">
+            <p className="max-w-3xl text-sm leading-8 text-textSecondary">
+              {userInfo?.about ?? "Hakkında bilgisi bulunmuyor."}
+            </p>
+          </div>
+        </Card>
+
+        <div className="grid gap-4">
+          {isOwnProfile && (
+            <Card className="border-slate-200/80 bg-white p-5">
+              <p className="font-semibold text-textPrimary">Profil kısayolları</p>
+              <div className="mt-4 grid gap-3">
+                {profileActions.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="group flex items-center gap-3 rounded-card border border-slate-100 bg-surface-subtle p-3 transition hover:border-primary-subtle-active hover:bg-primary-subtle"
+                  >
+                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-white text-primary shadow-card transition group-hover:bg-primary group-hover:text-white">
+                      {item.icon}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-textPrimary">
+                        {item.label}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-textSecondary">
+                        {item.description}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          )}
+
+        </div>
+      </section>
 
       {isOwnProfile && <UserForm open={open} setOpen={setOpen} />}
-    </div>
+    </PageContainer>
   );
 };
 

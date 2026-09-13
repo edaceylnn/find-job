@@ -65,9 +65,12 @@ RESEND_FROM_EMAIL=KariyerBul <onboarding@resend.dev>
 
 ```env
 VITE_API_URL=http://localhost:8800/api-v1
+VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
+VITE_CLOUDINARY_UPLOAD_PRESET=your-unsigned-upload-preset
 ```
 
 Canlı ortamda `CLIENT_URL` frontend domaini, `VITE_API_URL` ise backend API adresi olmalıdır. Resend ile doğrulanmış domain kullanıldığında `RESEND_FROM_EMAIL` değeri örneğin `KariyerBul <noreply@edaceylan.com>` şeklinde güncellenebilir.
+Cloudinary üzerinden logo, profil görseli ve CV yüklemek için unsigned upload preset gerekir; CV yükleme kullanılacaksa preset'in raw dosya yüklemeye izin verdiğini kontrol edin.
 
 ## Çalıştırma
 
@@ -85,12 +88,45 @@ cd client
 npm run dev
 ```
 
+## Demo Verisi
+
+Portfolyo demosu için örnek şirket, aday, ilan, kayıtlı ilan ve başvuru
+durumlarını tek komutla oluşturabilirsiniz:
+
+```bash
+npm run server:seed:demo
+```
+
+Bu komut aynı demo e-postalarına ait eski verileri temizleyip yeniden oluşturur.
+
+Demo şirket hesabı:
+
+```txt
+E-posta: demo.company@kariyerbul.dev
+Şifre: Demo1234
+```
+
+Demo aday hesabı:
+
+```txt
+E-posta: demo.candidate@kariyerbul.dev
+Şifre: Demo1234
+```
+
 ## Build
 
 ```bash
 cd client
 npm run build
 ```
+
+Tüm temel kontrolleri repo kökünden tek komutla çalıştırmak için:
+
+```bash
+npm run check
+```
+
+Canlıya çıkış öncesi ortam değişkenleri ve smoke test adımları için `docs/DEPLOYMENT.md` dosyasını takip edin.
 
 ## Proje Yapısı
 

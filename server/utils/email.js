@@ -30,3 +30,56 @@ export const sendPasswordResetEmail = async ({ to, resetUrl, name }) => {
     throw new Error(error.message || "E-posta gönderilemedi.");
   }
 };
+
+const applicationStatusCopy = {
+  reviewed: {
+    subject: "Başvurun inceleniyor",
+    heading: "Başvurun inceleniyor",
+    body: "başvurun şirket tarafından incelemeye alındı.",
+  },
+  accepted: {
+    subject: "Başvurun kabul edildi",
+    heading: "Tebrikler!",
+    body: "başvurun kabul edildi. Şirket seninle iletişime geçecek.",
+  },
+  rejected: {
+    subject: "Başvurun hakkında güncelleme",
+    heading: "Başvuru güncellemesi",
+    body: "başvurun bu sefer olumlu sonuçlanmadı. Diğer ilanlara göz atmaya devam edebilirsin.",
+  },
+};
+
+export const sendApplicationStatusEmail = async ({
+  to,
+  name,
+  jobTitle,
+  companyName,
+  status,
+}) => {
+  const copy = applicationStatusCopy[status];
+  if (!copy) return; // "pending" or an unrecognized status has nothing to announce
+
+  if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Resend e-posta ayarları eksik.");
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const recipientName = name || "Merhaba";
+
+  const { error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to,
+    subject: `KariyerBul - ${copy.subject}: ${jobTitle}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a">
+        <h2 style="margin:0 0 12px;color:#2563eb">${copy.heading}</h2>
+        <p>${recipientName}, <strong>${companyName || "şirket"}</strong> için yaptığın <strong>${jobTitle}</strong> ${copy.body}</p>
+        <p style="font-size:13px;color:#64748b">Başvuru durumunu KariyerBul üzerinden "Başvurularım" sayfasından takip edebilirsin.</p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    throw new Error(error.message || "E-posta gönderilemedi.");
+  }
+};

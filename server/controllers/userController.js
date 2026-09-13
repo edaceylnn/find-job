@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Users from "../models/userModel.js";
+import { sendNotFound, sendServerError } from "../utils/httpResponses.js";
 
 export const updateUser = async (req, res, next) => {
   const {
@@ -11,17 +12,19 @@ export const updateUser = async (req, res, next) => {
     profileUrl,
     jobTitle,
     about,
+    cvUrl,
   } = req.body;
 
   try {
     if (!firstName || !lastName || !email || !contact || !jobTitle || !about) {
       next("Please provide all required fields");
+      return;
     }
 
     const id = req.body.user.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(404).send(`No User with id: ${id}`);
+      return sendNotFound(res, "Aday bulunamadı.");
     }
 
     const updateUser = {
@@ -33,10 +36,15 @@ export const updateUser = async (req, res, next) => {
       profileUrl,
       jobTitle,
       about,
+      cvUrl,
       _id: id,
     };
 
     const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });
+
+    if (!user) {
+      return sendNotFound(res, "Aday bulunamadı.");
+    }
 
     const token = user.createJWT();
 
@@ -49,8 +57,7 @@ export const updateUser = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Profil güncellenemedi.");
   }
 };
 
@@ -61,10 +68,7 @@ export const getUser = async (req, res, next) => {
     const user = await Users.findById({ _id: id });
 
     if (!user) {
-      return res.status(200).send({
-        message: "User Not Found",
-        success: false,
-      });
+      return sendNotFound(res, "Aday bulunamadı.");
     }
 
     user.password = undefined;
@@ -74,12 +78,7 @@ export const getUser = async (req, res, next) => {
       user: user,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Kimlik doğrulama hatası",
-      success: false,
-      error: error.message,
-    });
+    sendServerError(res, error, "Aday profili getirilemedi.");
   }
 };
 
@@ -88,10 +87,7 @@ export const getUserById = async (req, res, next) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(404).json({
-        success: false,
-        message: "Aday bulunamadı.",
-      });
+      return sendNotFound(res, "Aday bulunamadı.");
     }
 
     const user = await Users.findById(id).select(
@@ -99,10 +95,7 @@ export const getUserById = async (req, res, next) => {
     );
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "Aday bulunamadı.",
-      });
+      return sendNotFound(res, "Aday bulunamadı.");
     }
 
     res.status(200).json({
@@ -110,11 +103,6 @@ export const getUserById = async (req, res, next) => {
       user,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Kimlik doğrulama hatası",
-      success: false,
-      error: error.message,
-    });
+    sendServerError(res, error, "Aday profili getirilemedi.");
   }
 };

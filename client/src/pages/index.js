@@ -7,6 +7,7 @@ import UploadJob from "./UploadJob";
 import About from "./About";
 import JobDetail from "./JobDetail";
 import Applications from "./Applications";
+import SavedJobs from "./SavedJobs";
 import NotFound from "./NotFound";
 import ResetPassword from "./ResetPassword";
 
@@ -20,6 +21,7 @@ export {
   About,
   JobDetail,
   Applications,
+  SavedJobs,
   NotFound,
   ResetPassword,
 };

@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
-import bcrypt from "bcryptjs";
-import JWT from "jsonwebtoken";
+import authPlugin from "./plugins/authPlugin.js";
 
 const companySchema = new Schema({
   name: {
@@ -29,25 +28,10 @@ const companySchema = new Schema({
   passwordResetExpires: { type: Date },
 });
 
-// Middlewares
-companySchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
+companySchema.plugin(authPlugin);
 
-//compare password
-companySchema.methods.comparePassword = async function (userPassword) {
-  const isMatch = await bcrypt.compare(userPassword, this.password);
-  return isMatch;
-};
-
-//JSON WEBTOKEN
-companySchema.methods.createJWT = function () {
-  return JWT.sign({ userId: this._id }, process.env.JWT_SECRET_KEY, {
-    expiresIn: "1d",
-  });
-};
+companySchema.index({ name: 1 });
+companySchema.index({ location: 1 });
 
 const Companies = mongoose.model("Companies", companySchema);
 

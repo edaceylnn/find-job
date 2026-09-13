@@ -1,6 +1,6 @@
 import Users from "../models/userModel.js";
-import crypto from "crypto";
-import { sendPasswordResetEmail } from "../utils/email.js";
+import { requestPasswordReset, applyPasswordReset } from "../utils/passwordReset.js";
+import { sendServerError } from "../utils/httpResponses.js";
 
 export const register = async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
@@ -9,22 +9,26 @@ export const register = async (req, res, next) => {
 
   if (!firstName) {
     next("First Name is required");
+    return;
   }
   if (!email) {
     next("Email is required");
+    return;
   }
   if (!lastName) {
     next("Last Name is required");
+    return;
   }
   if (!password) {
     next("Password is required");
+    return;
   }
 
   try {
     const userExist = await Users.findOne({ email });
 
     if (userExist) {
-      next("Email Address already exists");
+      next({ statusCode: 409, message: "Email Address already exists" });
       return;
     }
 
@@ -51,8 +55,7 @@ export const register = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Hesap oluşturulamadı.");
   }
 };
 
@@ -93,8 +96,7 @@ export const signIn = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Giriş yapılamadı.");
   }
 };
 
@@ -107,52 +109,30 @@ export const forgotPassword = async (req, res, next) => {
       return;
     }
 
-    const user = await Users.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "Bu e-posta adresiyle kayıtlı aday hesabı bulunamadı.",
-      });
-    }
-
-    const resetToken = crypto.randomBytes(24).toString("hex");
-    user.passwordResetToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
-    user.passwordResetExpires = Date.now() + 15 * 60 * 1000;
-
-    await user.save({ validateBeforeSave: false });
-
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}&accountType=seeker`;
-
     try {
-      await sendPasswordResetEmail({
-        to: email,
-        resetUrl,
-        name: user.firstName,
+      await requestPasswordReset({
+        Model: Users,
+        email,
+        accountType: "seeker",
+        getName: (user) => user.firstName,
       });
     } catch (error) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-
-      return res.status(500).json({
-        success: false,
-        message: error.message || "Şifre sıfırlama e-postası gönderilemedi.",
-      });
+      return sendServerError(
+        res,
+        error,
+        "Şifre sıfırlama e-postası gönderilemedi."
+      );
     }
 
+    // Same response whether or not the account exists, so this endpoint
+    // can't be used to check which emails are registered.
     res.status(200).json({
       success: true,
       message:
-        "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
+        "Bu e-posta adresiyle kayıtlı bir hesap varsa, şifre sıfırlama bağlantısı gönderildi.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şifre sıfırlama isteği işlenemedi.");
   }
 };
 
@@ -165,16 +145,7 @@ export const resetPassword = async (req, res, next) => {
       return;
     }
 
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
-
-    const user = await Users.findOne({
-      email,
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
-    });
+    const user = await applyPasswordReset({ Model: Users, email, token, password });
 
     if (!user) {
       return res.status(400).json({
@@ -183,18 +154,11 @@ export const resetPassword = async (req, res, next) => {
       });
     }
 
-    user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-
-    await user.save();
-
     res.status(200).json({
       success: true,
       message: "Şifren başarıyla güncellendi. Yeni şifrenle giriş yapabilirsin.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şifre güncellenemedi.");
   }
 };

@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 import Companies from "../models/companiesModel.js";
 import Jobs from "../models/jobsModel.js";
-import { response } from "express";
 import { createSearchRegex } from "../utils/search.js";
-import crypto from "crypto";
-import { sendPasswordResetEmail } from "../utils/email.js";
+import { requestPasswordReset, applyPasswordReset } from "../utils/passwordReset.js";
+import {
+  sendForbidden,
+  sendNotFound,
+  sendServerError,
+} from "../utils/httpResponses.js";
 
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -27,7 +30,7 @@ export const register = async (req, res, next) => {
     const accountExist = await Companies.findOne({ email });
 
     if (accountExist) {
-      next("Email Already Registered. Please Login");
+      next({ statusCode: 409, message: "Email Already Registered. Please Login" });
       return;
     }
 
@@ -52,8 +55,7 @@ export const register = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket hesabı oluşturulamadı.");
   }
 };
 
@@ -91,8 +93,7 @@ export const signIn = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket girişi yapılamadı.");
   }
 };
 
@@ -105,52 +106,30 @@ export const forgotCompanyPassword = async (req, res, next) => {
       return;
     }
 
-    const company = await Companies.findOne({ email });
-
-    if (!company) {
-      return res.status(404).json({
-        success: false,
-        message: "Bu e-posta adresiyle kayıtlı şirket hesabı bulunamadı.",
-      });
-    }
-
-    const resetToken = crypto.randomBytes(24).toString("hex");
-    company.passwordResetToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
-    company.passwordResetExpires = Date.now() + 15 * 60 * 1000;
-
-    await company.save({ validateBeforeSave: false });
-
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const resetUrl = `${clientUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}&accountType=company`;
-
     try {
-      await sendPasswordResetEmail({
-        to: email,
-        resetUrl,
-        name: company.name,
+      await requestPasswordReset({
+        Model: Companies,
+        email,
+        accountType: "company",
+        getName: (company) => company.name,
       });
     } catch (error) {
-      company.passwordResetToken = undefined;
-      company.passwordResetExpires = undefined;
-      await company.save({ validateBeforeSave: false });
-
-      return res.status(500).json({
-        success: false,
-        message: error.message || "Şifre sıfırlama e-postası gönderilemedi.",
-      });
+      return sendServerError(
+        res,
+        error,
+        "Şifre sıfırlama e-postası gönderilemedi."
+      );
     }
 
+    // Same response whether or not the account exists, so this endpoint
+    // can't be used to check which emails are registered.
     res.status(200).json({
       success: true,
       message:
-        "Şifre sıfırlama bağlantısı e-posta adresine gönderildi.",
+        "Bu e-posta adresiyle kayıtlı bir hesap varsa, şifre sıfırlama bağlantısı gönderildi.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket şifre sıfırlama isteği işlenemedi.");
   }
 };
 
@@ -163,15 +142,11 @@ export const resetCompanyPassword = async (req, res, next) => {
       return;
     }
 
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
-
-    const company = await Companies.findOne({
+    const company = await applyPasswordReset({
+      Model: Companies,
       email,
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
+      token,
+      password,
     });
 
     if (!company) {
@@ -181,19 +156,12 @@ export const resetCompanyPassword = async (req, res, next) => {
       });
     }
 
-    company.password = password;
-    company.passwordResetToken = undefined;
-    company.passwordResetExpires = undefined;
-
-    await company.save();
-
     res.status(200).json({
       success: true,
       message: "Şifren başarıyla güncellendi. Yeni şifrenle giriş yapabilirsin.",
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket şifresi güncellenemedi.");
   }
 };
 
@@ -209,8 +177,9 @@ export const updateCompanyProfile = async (req, res, next) => {
 
     const id = req.body.user.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).send(`No Company with id: ${id}`);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
 
     const updateCompany = {
       name,
@@ -225,6 +194,10 @@ export const updateCompanyProfile = async (req, res, next) => {
       new: true,
     });
 
+    if (!company) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
+
     const token = company.createJWT();
 
     company.password = undefined;
@@ -237,8 +210,7 @@ export const updateCompanyProfile = async (req, res, next) => {
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket profili güncellenemedi.");
   }
 };
 
@@ -249,10 +221,7 @@ export const getCompanyProfile = async (req, res, next) => {
     const company = await Companies.findById({ _id: id });
 
     if (!company) {
-      return res.status(200).send({
-        message: "Company Not Found",
-        success: false,
-      });
+      return sendNotFound(res, "Şirket bulunamadı.");
     }
 
     company.password = undefined;
@@ -261,8 +230,7 @@ export const getCompanyProfile = async (req, res, next) => {
       data: company,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket profili getirilemedi.");
   }
 };
 
@@ -310,11 +278,8 @@ export const getCompanies = async (req, res, next) => {
     // records count
     const total = await Companies.countDocuments(queryObject);
     const numOfPage = Math.ceil(total / limit);
-    // move next page
-    // queryResult = queryResult.skip(skip).limit(limit);
 
-    // Show more instead of moving to next page
-    queryResult = queryResult.limit(limit * page);
+    queryResult = queryResult.skip(skip).limit(limit);
 
     const companies = await queryResult;
 
@@ -326,8 +291,7 @@ export const getCompanies = async (req, res, next) => {
       numOfPage,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirketler getirilemedi.");
   }
 };
 
@@ -337,15 +301,19 @@ export const getCompanyJobListing = async (req, res, next) => {
   const id = req.body.user.userId;
 
   try {
-    // Search filters
     const queryObject = {};
 
     if (search) {
-      queryObject.location = { $regex: createSearchRegex(search), $options: "i" };
+      const searchRegex = createSearchRegex(search);
+      queryObject.$or = [
+        { jobTitle: { $regex: searchRegex, $options: "i" } },
+        { location: { $regex: searchRegex, $options: "i" } },
+        { jobType: { $regex: searchRegex, $options: "i" } },
+      ];
     }
 
-    let sorting;
-    //sorting || another way
+    let sorting = "-createdAt";
+
     if (sort === "Newest") {
       sorting = "-createdAt";
     }
@@ -353,25 +321,33 @@ export const getCompanyJobListing = async (req, res, next) => {
       sorting = "createdAt";
     }
     if (sort === "A-Z") {
-      sorting = "name";
+      sorting = "jobTitle";
     }
     if (sort === "Z-A") {
-      sorting = "-name";
+      sorting = "-jobTitle";
     }
 
-    let queryResult = await Companies.findById({ _id: id }).populate({
-      path: "jobPosts",
-      options: { sort: sorting },
-    });
-    const companies = await queryResult;
+    const company = await Companies.findById(id).select("-password");
+
+    if (!company) {
+      return sendForbidden(
+        res,
+        "İlanlarını görüntülemek için şirket hesabı kullanmalısın."
+      );
+    }
+
+    const jobPosts = await Jobs.find({ company: id, ...queryObject }).sort(sorting);
+    const companyWithJobs = {
+      ...company.toObject(),
+      jobPosts,
+    };
 
     res.status(200).json({
       success: true,
-      companies,
+      companies: companyWithJobs,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket ilanları getirilemedi.");
   }
 };
 
@@ -379,6 +355,10 @@ export const getCompanyJobListing = async (req, res, next) => {
 export const getCompanyById = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendNotFound(res, "Şirket bulunamadı.");
+    }
 
     const company = await Companies.findById({ _id: id }).populate({
       path: "jobPosts",
@@ -388,10 +368,7 @@ export const getCompanyById = async (req, res, next) => {
     });
 
     if (!company) {
-      return res.status(200).send({
-        message: "Company Not Found",
-        success: false,
-      });
+      return sendNotFound(res, "Şirket bulunamadı.");
     }
 
     company.password = undefined;
@@ -401,8 +378,7 @@ export const getCompanyById = async (req, res, next) => {
       data: company,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket profili getirilemedi.");
   }
 };
 
@@ -413,17 +389,17 @@ export const getCompanyApplications = async (req, res, next) => {
     const company = await Companies.findById(id);
 
     if (!company) {
-      return res.status(403).json({
-        success: false,
-        message: "Başvuranları görüntülemek için şirket hesabı kullanmalısın.",
-      });
+      return sendForbidden(
+        res,
+        "Başvuranları görüntülemek için şirket hesabı kullanmalısın."
+      );
     }
 
     const jobs = await Jobs.find({ company: id })
       .select("jobTitle application applicationStatus")
       .populate({
         path: "application",
-        select: "firstName lastName email jobTitle profileUrl",
+        select: "firstName lastName email jobTitle profileUrl cvUrl",
       });
 
     const applications = jobs.reduce((acc, job) => {
@@ -447,7 +423,6 @@ export const getCompanyApplications = async (req, res, next) => {
       data: applications,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    sendServerError(res, error, "Şirket başvuruları getirilemedi.");
   }
 };

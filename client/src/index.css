@@ -9,10 +9,17 @@
 }
 
 body {
-  background: #ffffff;
-  color: #0f172a;
+  @apply bg-surface-subtle text-textPrimary antialiased;
 }
 
 img {
   max-width: 100%;
+}
+
+::selection {
+  @apply bg-primary-subtle-active text-primary-active;
+}
+
+.app-surface {
+  background: #f8fafc;
 }

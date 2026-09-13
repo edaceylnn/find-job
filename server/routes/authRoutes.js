@@ -19,7 +19,7 @@ const router = express.Router();
 
 // Register routes
 router.post("/register", limiter, register);
-router.post("/login", signIn);
+router.post("/login", limiter, signIn);
 router.post("/forgot-password", limiter, forgotPassword);
 router.post("/reset-password", limiter, resetPassword);
 

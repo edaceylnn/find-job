@@ -7,6 +7,8 @@ import {
   getJobById,
   getJobPosts,
   getMyApplications,
+  getSavedJobs,
+  toggleSaveJob,
   updateApplicationStatus,
   updateJob,
 } from "../controllers/jobController.js";
@@ -23,6 +25,10 @@ router.put("/update-job/:jobId", userAuth, updateJob);
 router.get("/find-jobs", getJobPosts);
 router.get("/get-job-detail/:id", getJobById);
 router.get("/my-applications", userAuth, getMyApplications);
+
+// SAVED JOBS
+router.get("/saved-jobs", userAuth, getSavedJobs);
+router.post("/save-job/:id", userAuth, toggleSaveJob);
 
 // APPLY JOB
 router.post("/apply-job/:id", userAuth, applyJob);

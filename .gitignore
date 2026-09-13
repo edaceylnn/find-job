@@ -27,3 +27,7 @@ pnpm-debug.log*
 .DS_Store
 .vscode/
 .idea/
+.claude/
+
+# Scratch / generated working files
+tmp/

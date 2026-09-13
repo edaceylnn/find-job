@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import validator from "validator";
-import bcrypt from "bcryptjs";
-import JWT from "jsonwebtoken";
+import authPlugin from "./plugins/authPlugin.js";
 
 //schema
 const userSchema = new mongoose.Schema(
@@ -35,29 +34,12 @@ const userSchema = new mongoose.Schema(
     about: { type: String },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
+    savedJobs: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
   },
   { timestamps: true }
 );
 
-// Middlewares
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-//compare password
-userSchema.methods.comparePassword = async function (userPassword) {
-  const isMatch = await bcrypt.compare(userPassword, this.password);
-  return isMatch;
-};
-
-//JSON WEBTOKEN
-userSchema.methods.createJWT = function () {
-  return JWT.sign({ userId: this._id }, process.env.JWT_SECRET_KEY, {
-    expiresIn: "1d",
-  });
-};
+userSchema.plugin(authPlugin);
 
 const Users = mongoose.model("Users", userSchema);
 
