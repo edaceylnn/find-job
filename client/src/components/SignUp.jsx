@@ -35,11 +35,14 @@ const demoCredentials = {
   },
 };
 
-const isNetlifyDemoLoginEnabled = () => {
+const isHostedDemoLoginEnabled = () => {
   if (import.meta.env.VITE_DEMO_LOGIN_ENABLED === "true") return true;
   if (typeof window === "undefined") return false;
 
-  return window.location.hostname.endsWith(".netlify.app");
+  return (
+    window.location.hostname.endsWith(".netlify.app") ||
+    window.location.hostname.endsWith(".vercel.app")
+  );
 };
 
 const SignUp = ({ open, setOpen }) => {
@@ -67,7 +70,7 @@ const SignUp = ({ open, setOpen }) => {
   });
 
   const from = location.state?.from?.pathname || "/";
-  const shouldPrefillDemoLogin = !isRegister && isNetlifyDemoLoginEnabled();
+  const shouldPrefillDemoLogin = !isRegister && isHostedDemoLoginEnabled();
 
   useEffect(() => {
     if (!shouldPrefillDemoLogin) return;
